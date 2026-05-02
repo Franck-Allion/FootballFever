@@ -1,9 +1,15 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { IRefPhaserGame, PhaserGame } from '@ui/PhaserGame';
 import { MainMenu } from '@game/scenes/MainMenu';
+import { useFlowStore } from '@core/store/useFlowStore';
+import { GameState } from '@core/fsm/GameState';
+import { FlowService } from '@core/fsm/FlowService';
 
 function App()
 {
+    const { currentState, error } = useFlowStore();
+    const flowService = FlowService.getInstance();
+
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
 
@@ -16,7 +22,7 @@ function App()
         if(phaserRef.current)
         {     
             const scene = phaserRef.current.scene as MainMenu;
-            
+
             if (scene)
             {
                 scene.changeScene();
@@ -55,10 +61,10 @@ function App()
                 // Add more stars
                 const x = Phaser.Math.Between(64, scene.scale.width - 64);
                 const y = Phaser.Math.Between(64, scene.scale.height - 64);
-    
+
                 //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
                 const star = scene.add.sprite(x, y, 'star');
-    
+
                 //  ... which you can then act upon. Here we create a Phaser Tween to fade the star sprite in and out.
                 //  You could, of course, do this from within the Phaser Scene code, but this is just an example
                 //  showing that Phaser objects and systems can be acted upon from outside of Phaser itself.
@@ -77,28 +83,67 @@ function App()
     const currentScene = (scene: Phaser.Scene) => {
 
         setCanMoveSprite(scene.scene.key !== 'MainMenu');
-        
+
     }
 
     return (
-        <div id="app">
-            <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-            <div>
-                <div>
-                    <button className="button" onClick={changeScene}>Change Scene</button>
+        <div id="app" className="flex flex-col items-center p-4">
+            <div className="mb-4 text-xl font-bold bg-gray-800 text-white p-2 rounded shadow-lg">
+                Current State: <span className="text-yellow-400">{currentState}</span>
+            </div>
+
+            {error && (
+                <div className="mb-4 p-2 bg-red-600 text-white rounded border-2 border-red-900 animate-pulse">
+                    Error: {error}
                 </div>
-                <div>
-                    <button disabled={canMoveSprite} className="button" onClick={moveSprite}>Toggle Movement</button>
+            )}
+
+            <div className="flex gap-2 mb-8">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded" onClick={() => flowService.navigateTo(GameState.BOOT)}>Reset to BOOT</button>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded" onClick={() => flowService.navigateTo(GameState.HUB)}>Go to HUB</button>
+                <button className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded" onClick={() => flowService.navigateTo(GameState.MATCH_SIM)}>Attempt MATCH (AC Guard)</button>
+            </div>
+
+            {currentState === GameState.BOOT && (
+                <div className="text-center p-10 bg-blue-100 rounded-lg shadow-inner border-2 border-blue-300">
+                    <h1 className="text-3xl font-black text-blue-900 mb-2">FOOTBALL FEVER</h1>
+                    <p className="text-blue-700 italic">Initializing match engine...</p>
+                    <button className="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition-colors shadow" onClick={() => flowService.navigateTo(GameState.HUB)}>PRESS START</button>
                 </div>
-                <div className="spritePosition">Sprite Position:
-                    <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre>
+            )}
+
+            {(currentState === GameState.HUB || currentState === GameState.MATCH_SIM) && (
+                <div className="relative border-4 border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+                    <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
+
+                    {currentState === GameState.HUB && (
+                        <div className="absolute top-4 right-4 bg-white/90 p-4 rounded-lg shadow-lg border border-gray-200">
+                            <h3 className="font-bold text-gray-800 mb-2">HUB - Team Management</h3>
+                            <div className="flex flex-col gap-2">
+                                <button className="bg-blue-500 text-white py-1 px-3 rounded text-sm" onClick={changeScene}>Toggle Phaser Scene</button>
+                                <button disabled={canMoveSprite} className="bg-orange-500 disabled:bg-gray-400 text-white py-1 px-3 rounded text-sm" onClick={moveSprite}>Toggle Movement</button>
+                                <button className="bg-pink-500 text-white py-1 px-3 rounded text-sm" onClick={addSprite}>Add FX Sprite</button>
+                                <button className="mt-2 bg-green-600 text-white py-2 px-3 rounded font-bold hover:bg-green-700" onClick={() => flowService.navigateTo(GameState.MATCH_SIM)}>PLAY MATCH</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentState === GameState.MATCH_SIM && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+                            <div className="bg-red-600 text-white px-6 py-3 rounded-full font-black text-2xl animate-bounce shadow-2xl border-4 border-white">
+                                SIMULATING MATCH...
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div>
-                    <button className="button" onClick={addSprite}>Add New Sprite</button>
-                </div>
+            )}
+
+            <div className="mt-4 p-2 bg-gray-100 rounded text-xs font-mono border border-gray-300">
+                Sprite Position: x: {spritePosition.x.toFixed(0)}, y: {spritePosition.y.toFixed(0)}
             </div>
         </div>
     )
 }
 
 export default App
+

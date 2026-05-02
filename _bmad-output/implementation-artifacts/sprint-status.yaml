@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: 2026-05-02T16:45:00.000Z
+last_updated: 2026-05-02T16:50:00.000Z
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -43,13 +43,13 @@ development_status:
   epic-01-retrospective: optional
   epic-02: backlog
   epic-02-retrospective: optional
-  epic-03: backlog
-  3-1-finite-state-machine-controller: backlog
+  epic-03: in-progress
+  3-1-finite-state-machine-controller: done
   epic-03-retrospective: optional
   epic-04: backlog
   epic-04-retrospective: optional
-  epic-05: backlog
-  5-1-loggerservice-json: backlog
+  epic-05: in-progress
+  5-1-loggerservice-json: ready-for-dev
   5-2-in-game-debug-console: backlog
   epic-05-retrospective: optional
   epic-06: backlog
