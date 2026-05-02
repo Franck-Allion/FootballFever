@@ -1,0 +1,97 @@
+# generated: 2026-05-02T16:05:00.000Z
+# last_updated: 2026-05-02T16:05:00.000Z
+# project: FootballFever
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+generated: 2026-05-02T16:05:00.000Z
+last_updated: 2026-05-02T16:05:00.000Z
+project: FootballFever
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-00: backlog
+  0-1-initialisation-strict-ts: backlog
+  0-2-dossiers-aliases: backlog
+  epic-00-retrospective: optional
+  epic-01: backlog
+  epic-01-retrospective: optional
+  epic-02: backlog
+  epic-02-retrospective: optional
+  epic-03: backlog
+  3-1-finite-state-machine-controller: backlog
+  epic-03-retrospective: optional
+  epic-04: backlog
+  epic-04-retrospective: optional
+  epic-05: backlog
+  5-1-loggerservice-json: backlog
+  5-2-in-game-debug-console: backlog
+  epic-05-retrospective: optional
+  epic-06: backlog
+  epic-06-retrospective: optional
+  epic-07: backlog
+  7-1-worker-bootstrap-heartbeat: backlog
+  7-2-zone-based-physics-grid-20: backlog
+  7-3-xg-deterministic-resolution: backlog
+  epic-07-retrospective: optional
+  epic-08: backlog
+  epic-08-retrospective: optional
+  epic-09: backlog
+  epic-09-retrospective: optional
+  epic-10: backlog
+  epic-10-retrospective: optional
+  epic-11: backlog
+  11-1-virtualized-live-feed: backlog
+  epic-11-retrospective: optional
+  epic-12: backlog
+  epic-12-retrospective: optional
+  epic-13: backlog
+  epic-13-retrospective: optional
+  epic-14: backlog
+  epic-14-retrospective: optional
+  epic-15: backlog
+  epic-15-retrospective: optional
+  epic-16: backlog
+  epic-16-retrospective: optional
+  epic-17: backlog
+  epic-17-retrospective: optional
+  epic-18: backlog
+  epic-18-retrospective: optional
+  epic-19: backlog
+  epic-19-retrospective: optional
+  epic-20: backlog
+  epic-20-retrospective: optional
+  epic-21: backlog
+  epic-21-retrospective: optional
+  epic-22: backlog
+  epic-22-retrospective: optional
+  epic-23: backlog
+  23-1-tauri-desktop-build: backlog
+  epic-23-retrospective: optional
+  epic-24: backlog
+  epic-24-retrospective: optional
