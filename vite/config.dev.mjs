@@ -18,7 +18,9 @@ export default defineConfig({
         alias: {
             '@core': path.resolve(__dirname, '../src/core'),
             '@domains': path.resolve(__dirname, '../src/domains'),
-            '@ui': path.resolve(__dirname, '../src/presentation')
+            '@ui': path.resolve(__dirname, '../src/presentation'),
+            '@game': path.resolve(__dirname, '../src/game'),
+            '@utils': path.resolve(__dirname, '../src/utils')
         }
     }
 })

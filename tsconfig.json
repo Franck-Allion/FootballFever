@@ -27,7 +27,9 @@
     "paths": {
       "@core/*": ["src/core/*"],
       "@domains/*": ["src/domains/*"],
-      "@ui/*": ["src/presentation/*"]
+      "@ui/*": ["src/presentation/*"],
+      "@game/*": ["src/game/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
   "include": ["src"],

@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: 2026-05-02T16:20:00.000Z
+last_updated: 2026-05-02T16:45:00.000Z
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -37,7 +37,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   epic-00: in-progress
   0-1-initialisation-strict-ts: done
-  0-2-dossiers-aliases: backlog
+  0-2-dossiers-aliases: review
   epic-00-retrospective: optional
   epic-01: backlog
   epic-01-retrospective: optional
