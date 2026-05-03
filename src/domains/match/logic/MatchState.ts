@@ -20,6 +20,7 @@ export type MatchStats = z.infer<typeof MatchStatsSchema>;
  */
 export const TeamRatingSchema = z.object({
   shooting: z.number().finite().min(0).max(100),
+  control: z.number().finite().min(0).max(100).default(50),
 });
 
 export type TeamRating = z.infer<typeof TeamRatingSchema>;
@@ -80,8 +81,8 @@ export function createInitialMatchState(params: {
     score: { home: 0, away: 0 },
     homeStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
     awayStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
-    homeRating: params.homeRating ?? { shooting: 50 },
-    awayRating: params.awayRating ?? { shooting: 50 },
+    homeRating: params.homeRating ?? { shooting: 50, control: 50 },
+    awayRating: params.awayRating ?? { shooting: 50, control: 50 },
     possessionTeam: 'home',
     ballZone: 'MID_CENTER_L', // Default kickoff zone
     currentPhase: 'KICK_OFF',

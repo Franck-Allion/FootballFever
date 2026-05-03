@@ -5,14 +5,15 @@ import { createPRNG } from '../../../utils/Random';
 const SHOT_RESOLUTION_CONFIG = {
   xgShootValueWeight: 0.65,
   xgDistanceWeight: 0.35,
-  xgBaseScale: 0.32,
+  xgBaseScale: 0.18, // Adjusted to target ~2.5-3.0 goals per match
   neutralShootingSkill: 50,
   skillImpact: 0.5,
   maxXG: 0.95,
-  shotProbabilityScale: 0.5,
-  saveWindowMultiplier: 1.5,
-  maxSaveThreshold: 0.88,
+  shotProbabilityScale: 0.08, // Adjusted to target ~10-15 shots per team
+  saveWindowMultiplier: 1.2, // Goalkeepers more effective
+  maxSaveThreshold: 0.95, // Higher cap for saves
   tickSeconds: 5,
+  maxTurnoverShift: 0.15, // Maximum 15% shift based on rating difference
 } as const;
 
 /**
@@ -74,11 +75,6 @@ export function resolveShotForTests(state: MatchState, rng: () => number): Match
   const roll = rng();
   
   // 2. Determine Outcome
-  // We use a simplified model:
-  // - Goal if roll < xG
-  // - Shot on Target (but saved) if roll < xG * 2 (simplified)
-  // - Off-target otherwise
-  
   if (roll < xG) {
     // GOAL!
     stats.goals += 1;
@@ -95,7 +91,6 @@ export function resolveShotForTests(state: MatchState, rng: () => number): Match
   } else if (roll < Math.min(SHOT_RESOLUTION_CONFIG.maxSaveThreshold, xG * SHOT_RESOLUTION_CONFIG.saveWindowMultiplier)) {
     // SAVE
     stats.shotsOnTarget += 1;
-    // Goal kick or corner? Simplified to Goal Kick for now
     nextState.possessionTeam = attackingTeam === 'home' ? 'away' : 'home';
     nextState.ballZone = attackingTeam === 'home' ? 'BOX_CENTER_L' : 'DEF_HALF_LEFT';
     nextState.currentPhase = 'GOAL_KICK';
@@ -163,24 +158,43 @@ export function advanceMatchState(state: MatchState): MatchState {
   // 4. Movement Logic (if no shot)
   const moveRoll = rng();
 
+  // Dynamic turnover based on control difference
+  const attackingControl = activeState.possessionTeam === 'home' 
+    ? activeState.homeRating.control 
+    : activeState.awayRating.control;
+  const defendingControl = activeState.possessionTeam === 'home' 
+    ? activeState.awayRating.control 
+    : activeState.homeRating.control;
+  
+  const controlDelta = attackingControl - defendingControl;
+  const turnoverShift = (controlDelta / 100) * SHOT_RESOLUTION_CONFIG.maxTurnoverShift;
+  
+  // Base boundaries: Forward 0.30, Lateral 0.60, Backward 0.70, Turnover 1.00
+  // Apply shift to turnover (0.70 + shift)
+  const turnoverBoundary = clamp(0.70 + turnoverShift, 0.55, 0.85);
+  
+  // Distribute remaining probability to Forward and Lateral
+  const forwardBoundary = turnoverBoundary * 0.43; // ~30% of total if turnoverBoundary is 0.70
+  const lateralBoundary = turnoverBoundary * 0.86; // ~60% of total if turnoverBoundary is 0.70
+
   /**
-   * Move Probability Table:
-   * 0.00 - 0.50: Forward (50%)
-   * 0.50 - 0.75: Lateral (25%)
-   * 0.75 - 0.90: Backward (15%)
-   * 0.90 - 1.00: Turnover (10%)
+   * Move Probability Table (Dynamic):
+   * 0.00 - forwardBoundary: Forward
+   * forwardBoundary - lateralBoundary: Lateral
+   * lateralBoundary - turnoverBoundary: Backward
+   * turnoverBoundary - 1.00: Turnover
    */
-  if (moveRoll < 0.50) {
+  if (moveRoll < forwardBoundary) {
     const forward = getForwardZones(activeState.ballZone, activeState.possessionTeam);
     if (forward.length > 0) {
       nextState.ballZone = pickOne(forward, rng);
     }
-  } else if (moveRoll < 0.75) {
+  } else if (moveRoll < lateralBoundary) {
     const lateral = currentZone.lateralZones;
     if (lateral.length > 0) {
       nextState.ballZone = pickOne(lateral, rng);
     }
-  } else if (moveRoll < 0.90) {
+  } else if (moveRoll < turnoverBoundary) {
     const backward = getBackwardZones(activeState.ballZone, activeState.possessionTeam);
     if (backward.length > 0) {
       nextState.ballZone = pickOne(backward, rng);
