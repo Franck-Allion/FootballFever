@@ -1,10 +1,12 @@
 import { FlowController } from './FlowController';
 import { GameState } from './GameState';
 import { useFlowStore } from '../store/useFlowStore';
+import { LoggerService, LogDomain } from '../services/logger/LoggerService';
 
 export class FlowService {
     private static instance: FlowService;
     private controller: FlowController;
+    private logger = LoggerService.getInstance();
 
     private constructor() {
         const initialStatus = useFlowStore.getState().currentState;
@@ -12,6 +14,7 @@ export class FlowService {
 
         this.controller.setOnStateChange((state) => {
             useFlowStore.getState().setGameState(state);
+            this.logger.info(`State changed to ${state}`, { state }, LogDomain.CORE);
         });
     }
 
@@ -37,7 +40,7 @@ export class FlowService {
         const result = await this.controller.transitionTo(state);
         if (!result.success) {
             useFlowStore.getState().setError(result.error || 'Transition failed');
-            console.error(`[FlowService] ${result.error}`);
+            this.logger.error(`Transition failed: ${result.error}`, { targetState: state }, LogDomain.CORE);
         }
     }
 }

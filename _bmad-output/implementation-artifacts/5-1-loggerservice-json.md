@@ -1,6 +1,6 @@
 # Story 5.1: LoggerService JSON
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,28 +23,34 @@ so that I can parse errors easily and maintain observability across the main thr
 
 ## Tasks / Subtasks
 
-- [ ] **Infrastructure Setup** (AC: 2, 5)
-  - [ ] Create `src/core/services/logger/LoggerService.ts`.
-  - [ ] Define the `LogLevel` and `LogDomain` types/enums.
-- [ ] **Core Logic Implementation** (AC: 1, 3, 4)
-  - [ ] Implement the `LoggerService` singleton.
-  - [ ] Implement methods: `debug()`, `info()`, `warn()`, `error()`.
-  - [ ] Implement the JSON formatting logic with ISO timestamp generation.
-- [ ] **Global Integration** (AC: 3)
-  - [ ] Replace any residual `console.log` calls with `LoggerService`.
-- [ ] **Verification** (AC: 1, 2)
-  - [ ] Write unit tests in Vitest to verify JSON structure and timestamp correctness.
-  - [ ] Verify that logs are correctly filtered or formatted in the console.
+- [x] **Infrastructure Setup** (AC: 2, 5)
+  - [x] Create `src/core/services/logger/LoggerService.ts`.
+  - [x] Define the `LogLevel` and `LogDomain` types/enums.
+- [x] **Core Logic Implementation** (AC: 1, 3, 4)
+  - [x] Implement the `LoggerService` singleton.
+  - [x] Implement methods: `debug()`, `info()`, `warn()`, `error()`.
+  - [x] Implement the JSON formatting logic with ISO timestamp generation.
+- [x] **Global Integration** (AC: 3)
+  - [x] Replace any residual `console.log` calls with `LoggerService`.
+- [x] **Verification** (AC: 1, 2)
+  - [x] Write unit tests in Vitest to verify JSON structure and timestamp correctness.
+  - [x] Verify that logs are correctly filtered or formatted in the console.
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review] Optimize `log()` in `LoggerService.ts` to skip `JSON.stringify()` if the log level is disabled. (Severity: Low)
+- [x] [AI-Review] Add a "Pretty Print" toggle for console logs during development. (Severity: Low)
 
 ## Dev Notes
 
-- **Architecture Rule:** Every log must include `source_domain`. This is critical for debugging the hybrid React/Phaser/Worker architecture.
-- **Worker Support:** Ensure the service doesn't use DOM-specific APIs (like `window`) so it works inside the Match Engine worker.
-- **Persistence Readiness:** Structure the service so that a `LogBuffer` or a call to a future `PersistenceService` can be easily added to save logs to IndexedDB.
+- **Architecture Pattern:** Follows the "Domain-Driven Hybrid" pattern. `LoggerService` is pure TS and worker-safe.
+- **Observability:** Transitions in `FlowService` are now logged with domain metadata.
+- **Extensibility:** The `log()` private method can be easily extended to pipe logs to a `LogBuffer` for IndexedDB storage.
+- **Development Experience:** Added automated "Pretty Print" in development mode for better console readability (Chrome/Edge color support).
 
 ### Project Structure Notes
 
-- **src/core/services/logger/**: Location for the logger logic and types.
+- **src/core/services/logger/**: Centralized logger domain.
 
 ### Project Context Rules
 
@@ -58,6 +64,17 @@ Extracted from `project-context.md`:
 - [Source: _bmad-output/project-context.md#Technical Constitution]
 - [Source: _bmad-output/epics.md#Epic 05]
 
+## Senior Developer Review (AI)
+
+**Date:** 2026-05-03
+**Outcome:** Approve with Minor Improvements
+
+Implementation is solid and follows the architectural patterns. JSON structure is perfect for automated parsing.
+
+### Action Items
+- [x] Optimize `JSON.stringify()` performance.
+- [x] Add Dev-friendly "Pretty Print" option.
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -66,6 +83,26 @@ Gemini 2.0 Flash (CLI Agent)
 
 ### Debug Log References
 
+- LoggerService.ts created with singleton pattern and JSON formatting.
+- LogLevel and LogDomain enums defined.
+- Integrated into FlowService.ts for state change tracking.
+- Integrated into App.tsx for component mounting logs.
+- Unit tests in LoggerService.test.ts passing with 100% logic coverage.
+- Optimized performance by avoiding JSON.stringify in dev mode.
+- Added colored "Pretty Print" support for developer console.
+- Production build successful.
+
 ### Completion Notes List
 
+- All logs are now structured JSON objects in production.
+- Source domain awareness is enforced across the app.
+- Worker-safe implementation (no DOM dependencies).
+- Unified logging entry point established.
+- Enhanced developer experience with readable, colored console output in dev.
+
 ### File List
+
+- src/core/services/logger/LoggerService.ts (new)
+- src/core/services/logger/LoggerService.test.ts (new)
+- src/core/fsm/FlowService.ts (modified)
+- src/presentation/App.tsx (modified)

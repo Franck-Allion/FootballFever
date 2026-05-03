@@ -117,3 +117,26 @@ This document contains the absolute rules and patterns that **must** be followed
 - **Stale Read After Write :** L'UI doit attendre la confirmation de l'écriture (Promise resolved) avant de rafraîchir l'affichage d'une progression.
 - **Replay / Re-entry Duplication :** Unsubscribe systématique des listeners lors du démontage des composants ou scènes pour éviter les doublons de récompenses.
 - **Null External Data :** Validation Zod systématique de TOUTES les données entrantes (JSON, DB, payloads IA). Ne jamais faire confiance à la structure supposée.
+
+---
+
+## 🎨 Design Workflow: Google Stitch Integration
+
+FootballFever uses **Google Stitch** (stitch.withgoogle.com) as the primary AI-native design tool. Every UI component implementation must follow this collaborative loop:
+
+### 1. 📝 Stitch Design Brief (Agent Responsibility)
+Avant toute implémentation UI, l'agent doit générer un bloc de texte nommé `STITCH_PROMPT` contenant :
+- **Objective :** Le rôle fonctionnel de l'écran (ex: "Draft Roguelite Selection").
+- **Vibe :** L'esthétique visuelle (ex: "Futuristic Sports Management, neon green accents, dark glassmorphism").
+- **Technical Constraints :** React 19, Tailwind CSS, Mobile-First.
+- **Data Contracts :** Les props et états Zustand que le design doit manipuler.
+
+### 2. 🎨 Design Generation (User Responsibility)
+L'utilisateur injecte le `STITCH_PROMPT` dans Google Stitch et affine le design.
+
+### 3. 📥 Design Handoff (Ground Truth)
+L'utilisateur dépose le fichier **`DESIGN.md`** généré par Google Stitch à la racine du projet ou dans le dossier de la story.
+- **Mandat Agent :** Le fichier `DESIGN.md` devient la **source de vérité absolue** pour les styles (couleurs, spacing, typography). L'agent a l'interdiction de s'en écarter.
+
+### 4. 🧱 Implementation (Agent Responsibility)
+L'agent implémente les composants React/Tailwind en mappant les design tokens de `DESIGN.md` vers les classes Tailwind.

@@ -4,11 +4,25 @@ import { MainMenu } from '@game/scenes/MainMenu';
 import { useFlowStore } from '@core/store/useFlowStore';
 import { GameState } from '@core/fsm/GameState';
 import { FlowService } from '@core/fsm/FlowService';
+import { LoggerService, LogDomain } from '@core/services/logger/LoggerService';
+import { useTripleTap } from './hooks/useTripleTap';
+import { useDebugStore } from '@core/store/useDebugStore';
+import { DebugConsole } from './ui/debug/DebugConsole';
+import { useEconomyStore } from '@core/store/useEconomyStore';
 
 function App()
 {
     const { currentState, error } = useFlowStore();
+    const { prestige } = useEconomyStore();
     const flowService = FlowService.getInstance();
+    const logger = LoggerService.getInstance();
+    const toggleDebug = useDebugStore((state) => state.toggleVisibility);
+
+    useTripleTap(toggleDebug);
+
+    useEffect(() => {
+        logger.info('App Component Mounted', { currentState }, LogDomain.UI);
+    }, []);
 
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
@@ -88,8 +102,15 @@ function App()
 
     return (
         <div id="app" className="flex flex-col items-center p-4">
-            <div className="mb-4 text-xl font-bold bg-gray-800 text-white p-2 rounded shadow-lg">
-                Current State: <span className="text-yellow-400">{currentState}</span>
+            <DebugConsole />
+            
+            <div className="flex gap-4 mb-4">
+                <div className="text-xl font-bold bg-gray-800 text-white p-2 rounded shadow-lg">
+                    Current State: <span className="text-yellow-400">{currentState}</span>
+                </div>
+                <div className="text-xl font-bold bg-indigo-900 text-white p-2 rounded shadow-lg border-2 border-indigo-400">
+                    Prestige: <span className="text-yellow-300">{prestige}</span>
+                </div>
             </div>
 
             {error && (
