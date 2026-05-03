@@ -32,6 +32,7 @@ describe('MatchWorkerClient', () => {
         MockWorker.instances = [];
         vi.stubGlobal('Worker', MockWorker);
         vi.spyOn(LoggerService.getInstance(), 'info').mockImplementation(() => {});
+        vi.spyOn(LoggerService.getInstance(), 'debug').mockImplementation(() => {});
     });
 
     it('creates exactly one module worker instance across repeated bootstrap calls', () => {
@@ -60,15 +61,76 @@ describe('MatchWorkerClient', () => {
         );
     });
 
+    it('logs state update messages from the worker', () => {
+        getMatchWorkerClient();
+        const worker = MockWorker.instances[0];
+
+        const mockState = {
+            matchId: 'test',
+            seed: 123,
+            minute: 10,
+            second: 30,
+            period: 1,
+            score: { home: 1, away: 0 },
+            homeStats: { shots: 2, shotsOnTarget: 1, goals: 1, xG: 0.5, possessionSeconds: 300 },
+            awayStats: { shots: 1, shotsOnTarget: 0, goals: 0, xG: 0.1, possessionSeconds: 330 },
+            homeRating: { shooting: 65 },
+            awayRating: { shooting: 55 },
+            possessionTeam: 'home' as const,
+            ballZone: 'MID_CENTER_L' as const,
+            currentPhase: 'OPEN_PLAY' as const,
+            isComplete: false,
+        };
+
+        worker?.emitMessage({
+            type: 'state_update',
+            state: mockState
+        });
+
+        expect(LoggerService.getInstance().debug).toHaveBeenCalledWith(
+            'Match state updated',
+            {
+                minute: 10,
+                second: 30,
+                ballZone: 'MID_CENTER_L',
+                possession: 'home',
+                score: '1-0',
+                shots: 'H:2 A:1',
+                xG: 'H:0.50 A:0.10'
+            },
+            LogDomain.MATCH
+        );
+    });
+
+    it('warns when a state update message is malformed', () => {
+        getMatchWorkerClient();
+        const worker = MockWorker.instances[0];
+        const warnSpy = vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
+
+        worker?.emitMessage({
+            type: 'state_update',
+            state: {
+                minute: 10,
+                homeStats: { xG: 'invalid' }
+            }
+        } as unknown as MatchWorkerMessage);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            'Match worker received invalid state update',
+            { issues: expect.any(Array) },
+            LogDomain.MATCH
+        );
+    });
+
     it('logs a warning for unknown message types', () => {
         getMatchWorkerClient();
         const worker = MockWorker.instances[0];
         const warnSpy = vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
 
         worker?.emitMessage({
-            type: 'unknown_type' as any,
+            type: 'unknown_type',
             data: 'test'
-        } as any);
+        } as unknown as MatchWorkerMessage);
 
         expect(warnSpy).toHaveBeenCalledWith(
             'Match worker received unknown message type',

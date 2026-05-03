@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for domains/match/worker/MatchWorker.ts</title>
+    <title>Code coverage report for domains/match/logic/MatchState.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../prettify.css" />
     <link rel="stylesheet" href="../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../index.html">All files</a> / <a href="index.html">domains/match/worker</a> MatchWorker.ts</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">domains/match/logic</a> MatchState.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">90.62% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>42/42</span>
+                <span class='fraction'>58/64</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>4/6</span>
+                <span class='fraction'>5/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">90.62% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/42</span>
+                <span class='fraction'>58/64</span>
             </div>
         
             
@@ -143,17 +143,29 @@
 <a name='L78'></a><a href='#L78'>78</a>
 <a name='L79'></a><a href='#L79'>79</a>
 <a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -165,144 +177,162 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2188x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2188x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2188x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { MatchState, MatchStateSchema, createInitialMatchState } from '../logic/MatchState';
-import { advanceMatchState } from '../logic/MatchSimulation';
-&nbsp;
-export interface MatchWorkerHeartbeatMessage {
-    type: 'heartbeat';
-    timestamp: number;
-    sequence: number;
-}
-&nbsp;
-export interface MatchWorkerStateUpdateMessage {
-    type: 'state_update';
-    state: MatchState;
-}
-&nbsp;
-export type MatchWorkerMessage = 
-    | MatchWorkerHeartbeatMessage
-    | MatchWorkerStateUpdateMessage;
-&nbsp;
-let heartbeatSequence = 0;
-let heartbeatInterval: ReturnType&lt;typeof setInterval&gt; | null = null;
-let simulationInterval: ReturnType&lt;typeof setInterval&gt; | null = null;
-&nbsp;
-let currentMatchState: MatchState | null = null;
-const DEMO_MATCH_SEED = 7_202;
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { z } from 'zod';
+import { MatchZoneIdSchema } from './MatchZone';
 &nbsp;
 /**
- * Starts the worker simulation loop and heartbeats.
+ * Stats for a single team during a match.
  */
-export function start(): void {
-    if (heartbeatInterval || simulationInterval) <span class="branch-0 cbranch-no" title="branch not covered" >return;</span>
+export const MatchStatsSchema = z.object({
+  shots: z.number().int().finite().min(0).default(0),
+  shotsOnTarget: z.number().int().finite().min(0).default(0),
+  goals: z.number().int().finite().min(0).default(0),
+  xG: z.number().finite().min(0).default(0),
+  possessionSeconds: z.number().int().finite().min(0).default(0),
+});
 &nbsp;
-    // Heartbeat every 1s
-    heartbeatInterval = setInterval(() =&gt; {
-        heartbeatSequence += 1;
+export type MatchStats = z.infer&lt;typeof MatchStatsSchema&gt;;
 &nbsp;
-        postMessage({
-            type: 'heartbeat',
-            timestamp: Date.now(),
-            sequence: heartbeatSequence
-        } satisfies MatchWorkerHeartbeatMessage);
-    }, 1_000);
+/**
+ * Zod schema for the Match State.
+ * This is the single source of truth for a match simulation step.
+ */
+export const TeamRatingSchema = z.object({
+  shooting: z.number().finite().min(0).max(100),
+});
 &nbsp;
-    // Initial match setup for Story 7.2 (Demo purposes)
-    // In a real flow, this would be triggered by a message.
-    currentMatchState = createInitialMatchState({
-        matchId: 'DEMO_7_2',
-        seed: DEMO_MATCH_SEED
+export type TeamRating = z.infer&lt;typeof TeamRatingSchema&gt;;
+&nbsp;
+export const MatchStateSchema = z.object({
+  matchId: z.string().min(1),
+  seed: z.number().int().finite(),
+  minute: z.number().int().finite().min(0).max(120),
+  second: z.number().int().finite().min(0).max(59),
+  period: z.number().int().finite().min(1).max(4), // 1, 2 (normal), 3, 4 (extra time)
+  score: z.object({
+    home: z.number().int().finite().min(0),
+    away: z.number().int().finite().min(0),
+  }),
+  homeStats: MatchStatsSchema,
+  awayStats: MatchStatsSchema,
+  homeRating: TeamRatingSchema,
+  awayRating: TeamRatingSchema,
+  possessionTeam: z.enum(['home', 'away']),
+  ballZone: MatchZoneIdSchema,
+  currentPhase: z.enum(['OPEN_PLAY', 'SET_PIECE', 'GOAL_KICK', 'CORNER', 'PENALTY', 'KICK_OFF']),
+  isComplete: z.boolean().default(false),
+}).superRefine((state, context) =&gt; {
+  if (state.score.home !== state.homeStats.goals) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Home score must match home goals.',
+      path: ['score', 'home'],
     });
+  }
 &nbsp;
-    // Simulation Loop (e.g. 4 updates per second as per constitution rules)
-    simulationInterval = setInterval(() =&gt; {
-        if (!currentMatchState || currentMatchState.isComplete) <span class="branch-0 cbranch-no" title="branch not covered" >return;</span>
+  if (state.score.away !== state.awayStats.goals) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    context.addIssue({</span>
+<span class="cstat-no" title="statement not covered" >      code: z.ZodIssueCode.custom,</span>
+<span class="cstat-no" title="statement not covered" >      message: 'Away score must match away goals.',</span>
+<span class="cstat-no" title="statement not covered" >      path: ['score', 'away'],</span>
+<span class="cstat-no" title="statement not covered" >    });</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+});
 &nbsp;
-        currentMatchState = advanceMatchState(currentMatchState);
+export type MatchState = z.infer&lt;typeof MatchStateSchema&gt;;
 &nbsp;
-        postMessage({
-            type: 'state_update',
-            state: MatchStateSchema.parse(currentMatchState)
-        } satisfies MatchWorkerStateUpdateMessage);
-    }, 250);
+/**
+ * Initial state factory for a new match.
+ */
+export function createInitialMatchState(params: {
+  matchId: string;
+  seed: number;
+  homeRating?: TeamRating;
+  awayRating?: TeamRating;
+}): MatchState {
+  return {
+    matchId: params.matchId,
+    seed: params.seed,
+    minute: 0,
+    second: 0,
+    period: 1,
+    score: { home: 0, away: 0 },
+    homeStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
+    awayStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
+    homeRating: params.homeRating ?? { shooting: 50 },
+    awayRating: params.awayRating ?? { shooting: 50 },
+    possessionTeam: 'home',
+    ballZone: 'MID_CENTER_L', // Default kickoff zone
+    currentPhase: 'KICK_OFF',
+    isComplete: false,
+  };
 }
-&nbsp;
-export function stop(): void {
-    if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
-    }
-&nbsp;
-    if (simulationInterval) {
-        clearInterval(simulationInterval);
-        simulationInterval = null;
-    }
-&nbsp;
-    heartbeatSequence = 0;
-    currentMatchState = null;
-}
-&nbsp;
-// Worker isolation rule: keep this file free of DOM, React, and Phaser imports.
-// Auto-start when loaded as a worker entry point.
-start();
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->

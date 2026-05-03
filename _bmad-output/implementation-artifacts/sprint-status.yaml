@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: 2026-05-03T13:05:00.000Z
+last_updated: 2026-05-03T14:50:00.000Z
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -60,10 +60,11 @@ development_status:
   epic-06-retrospective: optional
   epic-07: in-progress
   7-1-worker-bootstrap-heartbeat: done
-  7-2-zone-based-physics-grid-20: backlog
-  7-3-xg-deterministic-resolution: backlog
+  7-2-zone-based-physics-grid-20: done
+  7-3-xg-deterministic-resolution: done
   epic-07-retrospective: optional
   epic-08: backlog
+  8-1-batch-simulator-tool: backlog
   epic-08-retrospective: optional
   epic-09: backlog
   epic-09-retrospective: optional
