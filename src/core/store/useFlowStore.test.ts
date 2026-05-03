@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { GameState } from '../fsm/GameState';
 import { FlowController } from '../fsm/FlowController';
 import { useFlowStore } from './useFlowStore';

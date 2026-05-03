@@ -41,6 +41,7 @@ so that imports are clean and decoupled from relative path nesting.
 - [x] [AI-Review] Refactor `import App from './App'` to `import App from '@ui/App'` in `src/main.tsx`. (Severity: Low)
 - [x] [AI-Review] Refactor `import { IRefPhaserGame, PhaserGame } from './PhaserGame'` to use aliases in `src/App.tsx`. (Severity: Low)
 - [x] [AI-Review] Move `App.tsx` and `PhaserGame.tsx` to `src/presentation/` to fully leverage the `@ui` alias. (Severity: Low)
+- [x] [AI-Review] Remove remaining ESLint debt in test files (`unused vi`, `no-explicit-any`) and restore full `npx eslint src` pass. (Severity: Low)
 
 ## Dev Notes
 
@@ -100,6 +101,7 @@ Gemini 2.0 Flash (CLI Agent)
 - Moved App.tsx and PhaserGame.tsx to src/presentation/.
 - `npm run test` passed.
 - `npm run build` passed.
+- Full `npx eslint src` run now passes after cleanup of test-only lint debt.
 
 ### Completion Notes List
 
@@ -107,6 +109,7 @@ Gemini 2.0 Flash (CLI Agent)
 - Folder structure is now git-ready with .gitkeep files in core directories.
 - Existing React components and entry points have been refactored to use the new aliases, improving code maintainability.
 - Root components (App, PhaserGame) moved to `@ui` (src/presentation/) for structural consistency.
+- Repository-wide ESLint debt linked to this review cycle has been resolved; `npx eslint src` now passes.
 
 ### File List
 
@@ -120,3 +123,10 @@ Gemini 2.0 Flash (CLI Agent)
 - src/presentation/App.tsx (moved/modified)
 - src/presentation/PhaserGame.tsx (moved/modified)
 - src/main.tsx (modified)
+- src/core/fsm/FlowService.test.ts (modified)
+- src/core/services/debug/DebugCommandService.test.ts (modified)
+- src/core/store/useFlowStore.test.ts (modified)
+
+### Change Log
+
+- 2026-05-03: Code review follow-up completed; cleaned remaining ESLint debt in test files and restored full lint pass.

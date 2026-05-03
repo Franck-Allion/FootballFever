@@ -1,6 +1,6 @@
 # Story 6.1: Entity Schemas & Registry Service
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,19 +20,23 @@ so that all game systems (React, Phaser, Web Worker) manipulate data through a s
 
 ## Tasks / Subtasks
 
-- [ ] **Schema Definition** (AC: 1, 4)
-  - [ ] Create `src/domains/shared/schemas/EntitySchemas.ts`.
-  - [ ] Define `PlayerRarity` and `PlayerPosition` enums.
-  - [ ] Implement `PlayerSchema` and `TeamSchema` with Zod.
-- [ ] **Registry Infrastructure** (AC: 2, 3, 5)
-  - [ ] Create `src/core/services/registry/DomainRegistry.ts`.
-  - [ ] Implement the singleton pattern for the registry.
-  - [ ] Add methods: `registerPlayer(player)`, `getPlayer(id)`, `registerTeam(team)`, etc.
-- [ ] **Factory Pattern Integration** (AC: 5)
-  - [ ] Create a basic `EntityFactory.ts` in `src/domains/shared/factories/` to generate valid players for testing.
-- [ ] **Verification** (AC: 3)
-  - [ ] Write unit tests to verify that invalid player data (e.g., stat > 100) is rejected by the registry.
-  - [ ] Verify that retrieved entities from the registry are deep-frozen or copies.
+- [x] **Schema Definition** (AC: 1, 4)
+  - [x] Create `src/domains/shared/schemas/EntitySchemas.ts`.
+  - [x] Define `PlayerRarity` and `PlayerPosition` enums.
+  - [x] Implement `PlayerSchema` and `TeamSchema` with Zod.
+- [x] **Registry Infrastructure** (AC: 2, 3, 5)
+  - [x] Create `src/core/services/registry/DomainRegistry.ts`.
+  - [x] Implement the singleton pattern for the registry.
+  - [x] Add methods: `registerPlayer(player)`, `getPlayer(id)`, `registerTeam(team)`, etc.
+- [x] **Factory Pattern Integration** (AC: 5)
+  - [x] Create a basic `EntityFactory.ts` in `src/domains/shared/factories/` to generate valid players for testing.
+- [x] **Verification** (AC: 3)
+  - [x] Write unit tests to verify that invalid player data (e.g., stat > 100) is rejected by the registry.
+  - [x] Verify that retrieved entities from the registry are deep-frozen or copies.
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review] Make `DomainRegistry` directly extensible with generic `registerSchema(type, schema)`, `register(type, entity)`, and `get(type, id)` APIs while keeping player/team wrappers. (Severity: Medium)
 
 ## Dev Notes
 
@@ -66,6 +70,32 @@ Gemini 2.0 Flash (CLI Agent)
 
 ### Debug Log References
 
+- Implemented worker-safe Zod schemas for players, stats, and teams in `EntitySchemas.ts`.
+- Added deterministic `EntityFactory` creation helpers backed by schema validation.
+- Implemented a singleton `DomainRegistry` with injected schemas, defensive cloning, and deep-freeze semantics.
+- Added Vitest coverage for invalid stat rejection, immutable retrieval, and team registration round-trips.
+- Validations run: targeted Vitest tests, full Vitest suite, production build, and scoped ESLint on touched registry/domain files.
+- Extended registry API to dynamic typed collections and added tests for non-player/team entity registration.
+- Post-review validation: full `npx eslint src` and full `npx vitest run` pass.
+
 ### Completion Notes List
 
+- Delivered strict `PlayerSchema` and `TeamSchema` definitions with bounded stat validation and no UI/DOM dependencies.
+- Kept `DomainRegistry` domain-agnostic by injecting schemas from `domains/shared`, preserving the `core` -> `domains` boundary.
+- Ensured registered entities are stored and returned as immutable defensive copies to reduce accidental mutation risk.
+- Added a deterministic `EntityFactory` for test data generation without hidden randomness.
+- Upgraded registry design to direct extensibility for future entity types without new core service methods.
+- Full test suite and repository-wide ESLint now pass.
+
 ### File List
+
+- src/domains/shared/schemas/EntitySchemas.ts (new)
+- src/domains/shared/factories/EntityFactory.ts (new)
+- src/domains/shared/factories/EntityFactory.test.ts (new)
+- src/domains/shared/registry/DomainRegistry.test.ts (new)
+- src/core/services/registry/DomainRegistry.ts (new/modified after review follow-up)
+
+### Change Log
+
+- 2026-05-03: Implemented entity schemas, registry service, deterministic factory, and verification tests; story moved to review.
+- 2026-05-03: Addressed code review findings by making registry API directly extensible and re-validating full lint/test suite.

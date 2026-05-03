@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { DebugCommandService } from './DebugCommandService';
 import { useEconomyStore } from '../../store/useEconomyStore';
 import { useDebugStore } from '../../store/useDebugStore';
+import { LogDomain, LogLevel } from '../logger/LoggerService';
 
 describe('DebugCommandService', () => {
     let service: DebugCommandService;
@@ -20,8 +21,8 @@ describe('DebugCommandService', () => {
     it('should parse and execute /clear_logs command', () => {
         useDebugStore.getState().addLog({
             timestamp: new Date().toISOString(),
-            level: 'INFO' as any,
-            source_domain: 'CORE' as any,
+            level: LogLevel.INFO,
+            source_domain: LogDomain.CORE,
             message: 'Test log'
         });
         

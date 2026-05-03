@@ -21,8 +21,8 @@ function App()
     useTripleTap(toggleDebug);
 
     useEffect(() => {
-        logger.info('App Component Mounted', { currentState }, LogDomain.UI);
-    }, []);
+        logger.info('App Component Mounted', undefined, LogDomain.UI);
+    }, [logger]);
 
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
