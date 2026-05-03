@@ -59,4 +59,43 @@ describe('MatchWorkerClient', () => {
             LogDomain.MATCH
         );
     });
-});
+
+    it('logs a warning for unknown message types', () => {
+        getMatchWorkerClient();
+        const worker = MockWorker.instances[0];
+        const warnSpy = vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
+
+        worker?.emitMessage({
+            type: 'unknown_type' as any,
+            data: 'test'
+        } as any);
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            'Match worker received unknown message type',
+            expect.any(Object),
+            LogDomain.MATCH
+        );
+    });
+
+    it('logs an error when the worker encounters a lifecycle error', () => {
+        getMatchWorkerClient();
+        const worker = MockWorker.instances[0];
+        const errorSpy = vi.spyOn(LoggerService.getInstance(), 'error').mockImplementation(() => {});
+
+        worker?.dispatchEvent(new ErrorEvent('error', {
+            message: 'Worker explosion',
+            filename: 'MatchWorker.ts',
+            lineno: 42
+        }));
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            'Match worker error detected',
+            {
+                message: 'Worker explosion',
+                filename: 'MatchWorker.ts',
+                lineno: 42
+            },
+            LogDomain.MATCH
+        );
+    });
+    });

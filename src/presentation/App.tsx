@@ -11,6 +11,7 @@ import { DebugConsole } from './ui/debug/DebugConsole';
 import { useEconomyStore } from '@core/store/useEconomyStore';
 import { useTranslation } from './hooks/useTranslation';
 import { LanguageSelector } from './ui/settings/LanguageSelector';
+import { useMatchWorker } from '@domains/match/hooks/useMatchWorker';
 
 function App()
 {
@@ -21,6 +22,7 @@ function App()
     const logger = LoggerService.getInstance();
     const toggleDebug = useDebugStore((state) => state.toggleVisibility);
 
+    useMatchWorker();
     useTripleTap(toggleDebug);
 
     useEffect(() => {
