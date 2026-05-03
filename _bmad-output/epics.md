@@ -157,9 +157,47 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 ### Epic 11: Match Texte & Résultat (MVP)
 *Goal: Suivre le match sans Phaser.*
 
-#### Story 11.1: Virtualized Live Feed
+#### Story 11.1: Virtualized Live Feed [COMPLETED]
 - **As a** Player, **I want** to read match comments in a fast list, **So that** I can follow x15 speed.
 - **AC:** `react-window` used for lists > 30 items. Performance stable.
+
+#### Story 11.2: Detailed Scoreboard & Stoppage Time
+- **As a** Player, **I want** to see scorers' names and cards in the scoreboard and experience stoppage time, **So that** the simulation feels like a real football broadcast.
+- **AC:** Scoreboard displays a list of scorers and player names for yellow/red cards. Engine calculates and displays +1', +2', etc. at the end of each half.
+
+#### Story 11.3: Match Simulation Visual Juice
+- **As a** Player, **I want** high-impact visual feedback when important events occur (Goal, Red Card, Injury), **So that** I feel the intensity even in a text simulation.
+- **AC:** Implementation of full-screen flash effects, camera shake (UI shake), and large animated overlays for GOAL and RED CARD events.
+
+#### Story 11.4: Simulation Speed Control & Skip
+- **As a** Busy Manager, **I want** to control the simulation speed (x15, x30, x60) or see the result instantly, **So that** I can progress through the season at my own pace.
+- **AC:** UI buttons for x15/x30/x60 speeds. "Skip to Result" button that executes the remaining simulation in a single batch (BatchSimulator) and displays the final score instantly.
+
+---
+
+### Epic 12: Commentaires Avancés (Random Buckets)
+*Goal: Richesse narrative et diversité des logs.*
+
+#### Story 12.1: Advanced Commentary Engine
+- **As a** Player, **I want** more varied and contextual comments (injuries, VAR, crowd), **So that** the match isn't repetitive.
+- **AC:** System supports random buckets and player-specific placeholders ({player}, {team}, etc.).
+
+#### Story 12.2: Full Commentary Catalog Implementation
+- **As a** Player, **I want** every match action to generate specific and varied commentary, **So that** I can follow the match precisely as described in the algorithm.
+- **AC:** Implementation of the complete catalog from `algorithm.md` (Passes, Duels, Pressing, Corners, Injuries, etc.) with localized variations.
+
+---
+
+### Epic 20: Saison & Championnat Simplifié
+*Goal: Structure de compétition et enjeux de classement.*
+
+#### Story 20.1: League Matchday Simulation & Suspense Feed
+- **As a** Manager, **I want** to see the results of other teams in my division after my match, **So that** I can see how my rivals performed.
+- **AC:** Simulation of all other matches in the matchday (BatchSimulator). Progressive display of results with a "suspense" animation (slow reveal).
+
+#### Story 20.2: Dynamic Standings Update
+- **As a** Competitor, **I want** the league table to be updated instantly after the matchday results, **So that** I can see my current position.
+- **AC:** Points and goal difference calculation. UI display of the full league table with promotion/relegation zone highlights.
 
 ---
 

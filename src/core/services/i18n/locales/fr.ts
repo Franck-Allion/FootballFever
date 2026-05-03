@@ -23,6 +23,26 @@ export const fr: Translations = {
         toggle_movement: 'Basculer Mouvement',
         add_fx_sprite: 'Ajouter Sprite FX'
     },
+    match: {
+        kickoff: "Coup d'envoi du match !",
+        goal_home: "BUT pour l'équipe à domicile ! ({0}-{1})",
+        goal_away: "BUT pour l'équipe à l'extérieur ! ({0}-{1})",
+        shot_miss_home: "Tentative de l'équipe à domicile, c'est à côté !",
+        shot_miss_away: "L'équipe à l'extérieur tente sa chance, mais le gardien s'interpose.",
+        momentum_neutral: "Le ballon circule au milieu de terrain, les deux équipes s'observent.",
+        half_time: "C'est la MI-TEMPS ! Les joueurs rejoignent les vestiaires.",
+        full_time: "Fin du match ! Score final: {0}-{1}",
+        resume_button: "Reprendre le match",
+        exit_button: "Retour au Hub",
+        live_sim: "SIMULATION LIVE",
+        paused: "PAUSE",
+        ht_overlay_title: "MI-TEMPS",
+        ht_overlay_desc: "Les joueurs reprennent leur souffle. Êtes-vous prêt pour la seconde période ?",
+        ft_overlay_title: "MATCH TERMINÉ",
+        ft_overlay_desc: "Le coup de sifflet final a retenti. Consultez les statistiques de vos joueurs.",
+        home_label: "DOMICILE",
+        away_label: "EXTÉRIEUR"
+    },
     debug: {
         console_title: 'Console Système',
         close_esc: 'FERMER [ESC]',

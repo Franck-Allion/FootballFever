@@ -16,12 +16,14 @@
     "test:ci": "vitest run --coverage"
   },
   "dependencies": {
+    "@types/react-window": "^1.8.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dexie": "^4.0.0",
     "phaser": "3.90.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-window": "^2.2.7",
     "tailwind-merge": "^2.3.0",
     "zod": "^3.22.0",
     "zustand": "^5.0.0"

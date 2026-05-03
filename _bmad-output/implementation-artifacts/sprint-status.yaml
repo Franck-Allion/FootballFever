@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: '2026-05-03T16:58:00.000Z'
+last_updated: '2026-05-03T21:20:00.000Z'
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -45,25 +45,25 @@ development_status:
   epic-02: done
   2-1-persistence-dexie-zod: done
   epic-02-retrospective: optional
-  epic-03: in-progress
+  epic-03: done
   3-1-finite-state-machine-controller: done
   epic-03-retrospective: optional
-  epic-04: in-progress
+  epic-04: done
   4-1-test-coverage-ci-guardrails: done
   epic-04-retrospective: optional
-  epic-05: in-progress
+  epic-05: done
   5-1-loggerservice-json: done
   5-2-in-game-debug-console: done
   epic-05-retrospective: optional
-  epic-06: in-progress
+  epic-06: done
   6-1-entity-schemas-registry: done
   epic-06-retrospective: optional
-  epic-07: in-progress
+  epic-07: done
   7-1-worker-bootstrap-heartbeat: done
   7-2-zone-based-physics-grid-20: done
   7-3-xg-deterministic-resolution: done
   epic-07-retrospective: optional
-  epic-08: in-progress
+  epic-08: done
   8-1-batch-simulator-tool: done
   epic-08-retrospective: optional
 
@@ -75,9 +75,8 @@ development_status:
   10-1-hub-v1-implementation: done
   epic-10-retrospective: optional
 
-  epic-11: backlog
-
-  11-1-virtualized-live-feed: backlog
+  epic-11: done
+  11-1-virtualized-live-feed: done
   epic-11-retrospective: optional
   epic-12: backlog
   epic-12-retrospective: optional

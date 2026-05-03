@@ -18,8 +18,13 @@ export interface MatchWorkerStartMatchMessage {
     seed: number;
 }
 
+export interface MatchWorkerResumeMatchMessage {
+    type: 'resume_match';
+}
+
 export interface MatchWorkerStopMatchMessage {
     type: 'stop_match';
+    clearState?: boolean;
 }
 
 export type MatchWorkerMessage = 
@@ -28,6 +33,7 @@ export type MatchWorkerMessage =
 
 export type MatchWorkerCommand =
     | MatchWorkerStartMatchMessage
+    | MatchWorkerResumeMatchMessage
     | MatchWorkerStopMatchMessage;
 
 let heartbeatSequence = 0;
@@ -57,14 +63,28 @@ export function start(): void {
 export function startMatch(command: MatchWorkerStartMatchMessage): void {
     if (simulationInterval) return;
 
-    currentMatchState = createInitialMatchState({
-        matchId: command.matchId,
-        seed: command.seed
-    });
+    // Only create initial state if we don't have one or if it's a new match
+    if (!currentMatchState || currentMatchState.matchId !== command.matchId) {
+        currentMatchState = createInitialMatchState({
+            matchId: command.matchId,
+            seed: command.seed
+        });
+    }
 
-    // Simulation Loop (e.g. 4 updates per second as per constitution rules)
+    runLoop();
+}
+
+export function resumeMatch(): void {
+    if (simulationInterval || !currentMatchState || currentMatchState.isComplete) return;
+    runLoop();
+}
+
+function runLoop(): void {
     simulationInterval = setInterval(() => {
-        if (!currentMatchState || currentMatchState.isComplete) return;
+        if (!currentMatchState || currentMatchState.isComplete) {
+            stopMatch({ type: 'stop_match', clearState: false });
+            return;
+        }
 
         currentMatchState = advanceMatchState(currentMatchState);
 
@@ -75,13 +95,15 @@ export function startMatch(command: MatchWorkerStartMatchMessage): void {
     }, 250);
 }
 
-export function stopMatch(): void {
+export function stopMatch(command?: MatchWorkerStopMatchMessage): void {
     if (simulationInterval) {
         clearInterval(simulationInterval);
         simulationInterval = null;
     }
 
-    currentMatchState = null;
+    if (command?.clearState !== false) {
+        currentMatchState = null;
+    }
 }
 
 export function stop(): void {
@@ -90,7 +112,7 @@ export function stop(): void {
         heartbeatInterval = null;
     }
 
-    stopMatch();
+    stopMatch({ type: 'stop_match', clearState: true });
     heartbeatSequence = 0;
 }
 
@@ -99,8 +121,11 @@ function handleCommand(event: MessageEvent<MatchWorkerCommand>): void {
         case 'start_match':
             startMatch(event.data);
             break;
+        case 'resume_match':
+            resumeMatch();
+            break;
         case 'stop_match':
-            stopMatch();
+            stopMatch(event.data);
             break;
     }
 }

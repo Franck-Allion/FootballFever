@@ -10,6 +10,7 @@ import { DebugConsole } from './ui/debug/DebugConsole';
 import { useTranslation } from './hooks/useTranslation';
 import { useMatchWorker } from '@domains/match/hooks/useMatchWorker';
 import HubScreen from './ui/hub/HubScreen';
+import MatchSimulationScreen from './ui/match/MatchSimulationScreen';
 
 function App()
 {
@@ -82,12 +83,11 @@ function App()
             {currentState === GameState.HUB && <HubScreen />}
 
             {currentState === GameState.MATCH_SIM && (
-                <div className="relative border-4 border-gray-700 rounded-xl overflow-hidden shadow-2xl m-4">
-                    <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-                        <div className="bg-red-600 text-white px-6 py-3 rounded-full font-black text-2xl animate-bounce shadow-2xl border-4 border-white">
-                            {t('common.simulating_match')}
-                        </div>
+                <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                    <MatchSimulationScreen />
+                    {/* Hidden Phaser instance to satisfy phaserRef dependencies without visual clutter */}
+                    <div className="hidden">
+                        <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
                     </div>
                 </div>
             )}
