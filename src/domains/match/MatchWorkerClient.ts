@@ -1,6 +1,6 @@
 import { LogDomain, LoggerService } from '@core/services/logger/LoggerService';
 import { MatchStateSchema } from './logic/MatchState';
-import type { MatchWorkerMessage } from './worker/MatchWorker';
+import type { MatchWorkerCommand, MatchWorkerMessage } from './worker/MatchWorker';
 
 export type { MatchWorkerMessage };
 
@@ -25,6 +25,20 @@ export class MatchWorkerClient {
         this.worker.removeEventListener('message', this.handleMessage);
         this.worker.removeEventListener('error', this.handleError);
         this.worker.terminate();
+    }
+
+    public startMatch(matchId: string, seed: number): void {
+        this.worker.postMessage({
+            type: 'start_match',
+            matchId,
+            seed
+        } satisfies MatchWorkerCommand);
+    }
+
+    public stopMatch(): void {
+        this.worker.postMessage({
+            type: 'stop_match'
+        } satisfies MatchWorkerCommand);
     }
 
     private readonly handleMessage = (event: MessageEvent<MatchWorkerMessage>): void => {

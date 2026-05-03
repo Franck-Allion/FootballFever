@@ -12,22 +12,35 @@ export interface MatchWorkerStateUpdateMessage {
     state: MatchState;
 }
 
+export interface MatchWorkerStartMatchMessage {
+    type: 'start_match';
+    matchId: string;
+    seed: number;
+}
+
+export interface MatchWorkerStopMatchMessage {
+    type: 'stop_match';
+}
+
 export type MatchWorkerMessage = 
     | MatchWorkerHeartbeatMessage
     | MatchWorkerStateUpdateMessage;
+
+export type MatchWorkerCommand =
+    | MatchWorkerStartMatchMessage
+    | MatchWorkerStopMatchMessage;
 
 let heartbeatSequence = 0;
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let simulationInterval: ReturnType<typeof setInterval> | null = null;
 
 let currentMatchState: MatchState | null = null;
-const DEMO_MATCH_SEED = 7_202;
 
 /**
- * Starts the worker simulation loop and heartbeats.
+ * Starts the worker heartbeat only.
  */
 export function start(): void {
-    if (heartbeatInterval || simulationInterval) return;
+    if (heartbeatInterval) return;
 
     // Heartbeat every 1s
     heartbeatInterval = setInterval(() => {
@@ -39,12 +52,14 @@ export function start(): void {
             sequence: heartbeatSequence
         } satisfies MatchWorkerHeartbeatMessage);
     }, 1_000);
+}
 
-    // Initial match setup for Story 7.2 (Demo purposes)
-    // In a real flow, this would be triggered by a message.
+export function startMatch(command: MatchWorkerStartMatchMessage): void {
+    if (simulationInterval) return;
+
     currentMatchState = createInitialMatchState({
-        matchId: 'DEMO_7_2',
-        seed: DEMO_MATCH_SEED
+        matchId: command.matchId,
+        seed: command.seed
     });
 
     // Simulation Loop (e.g. 4 updates per second as per constitution rules)
@@ -60,21 +75,37 @@ export function start(): void {
     }, 250);
 }
 
+export function stopMatch(): void {
+    if (simulationInterval) {
+        clearInterval(simulationInterval);
+        simulationInterval = null;
+    }
+
+    currentMatchState = null;
+}
+
 export function stop(): void {
     if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
     }
 
-    if (simulationInterval) {
-        clearInterval(simulationInterval);
-        simulationInterval = null;
-    }
-
+    stopMatch();
     heartbeatSequence = 0;
-    currentMatchState = null;
+}
+
+function handleCommand(event: MessageEvent<MatchWorkerCommand>): void {
+    switch (event.data.type) {
+        case 'start_match':
+            startMatch(event.data);
+            break;
+        case 'stop_match':
+            stopMatch();
+            break;
+    }
 }
 
 // Worker isolation rule: keep this file free of DOM, React, and Phaser imports.
-// Auto-start when loaded as a worker entry point.
+// Loading the worker must not start a match simulation. Matches are command-driven.
+addEventListener('message', handleCommand);
 start();

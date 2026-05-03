@@ -44,6 +44,24 @@ describe('MatchWorkerClient', () => {
         expect(MockWorker.instances[0]?.options).toEqual({ type: 'module' });
     });
 
+    it('does not start simulation when the worker client is created', () => {
+        getMatchWorkerClient();
+
+        expect(MockWorker.instances[0]?.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('sends an explicit start command before match simulation begins', () => {
+        const client = getMatchWorkerClient();
+
+        client.startMatch('HUB_MATCH_1', 7_202);
+
+        expect(MockWorker.instances[0]?.postMessage).toHaveBeenCalledWith({
+            type: 'start_match',
+            matchId: 'HUB_MATCH_1',
+            seed: 7_202
+        });
+    });
+
     it('logs heartbeat messages from the worker through LoggerService', () => {
         getMatchWorkerClient();
         const worker = MockWorker.instances[0];

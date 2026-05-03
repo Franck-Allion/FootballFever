@@ -70,9 +70,13 @@ development_status:
   epic-09: done
   9-1-match-engine-balancing: done
   epic-09-retrospective: optional
-  epic-10: backlog
+
+  epic-10: done
+  10-1-hub-v1-implementation: done
   epic-10-retrospective: optional
+
   epic-11: backlog
+
   11-1-virtualized-live-feed: backlog
   epic-11-retrospective: optional
   epic-12: backlog
