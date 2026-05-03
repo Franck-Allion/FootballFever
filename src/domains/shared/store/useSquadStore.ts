@@ -24,6 +24,8 @@ export interface ActiveSynergy {
     description: string;
 }
 
+export type MoraleState = 'LOW' | 'STABLE' | 'HIGH' | 'EXCESSIVE';
+
 interface SquadState {
     teamName: string;
     teamLogo: string;
@@ -32,7 +34,7 @@ interface SquadState {
     overallRating: number;
     composites: TeamComposites;
     staminaAvg: number;
-    morale: 'LOW' | 'STABLE' | 'HIGH' | 'EXCESSIVE';
+    morale: MoraleState;
     streak: string[];
     routeNodes: TimelineNode[];
     activeSynergies: ActiveSynergy[];
