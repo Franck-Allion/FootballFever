@@ -31,6 +31,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@core': path.resolve(__dirname, '../src/core'),
+            '@i18n': path.resolve(__dirname, '../src/core/services/i18n'),
             '@domains': path.resolve(__dirname, '../src/domains'),
             '@ui': path.resolve(__dirname, '../src/presentation'),
             '@game': path.resolve(__dirname, '../src/game'),

@@ -88,12 +88,39 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 
 ---
 
+### Epic 01: Localisation Immédiate
+*Goal: Support multilingue dès le départ.*
+
+#### Story 1.1: Localization Infrastructure
+- **As a** Global Player, **I want** the UI in my language (FR/EN/ES/DE), **So that** I understand the gameplay.
+- **AC:** `LocalizationService` setup, no hardcoded strings in `App.tsx`, language switching works.
+
+---
+
+### Epic 02: Sauvegarde Immédiate
+*Goal: Persistance des données via IndexedDB.*
+
+#### Story 2.1: Persistence with Dexie.js & Zod
+- **As a** Player, **I want** my progress to be saved automatically, **So that** I can resume my career.
+- **AC:** `DatabaseService` implemented with Dexie, Zod validation on load, data survives refresh.
+
+---
+
 ### Epic 03: Flow Applicatif (FSM)
 *Goal: Gérer les transitions d'état globales (BOOT -> HUB -> MATCH).*
 
 #### Story 3.1: Finite State Machine Controller
 - **As an** Architect, **I want** a centralized `FlowController`, **So that** screen transitions are deterministic.
 - **AC:** Transition `HUB` to `MATCH` only possible if lineup is valid.
+
+---
+
+### Epic 04: Qualité & CI (Vitest/Garde-fous)
+*Goal: Garantir la stabilité et la couverture de test.*
+
+#### Story 4.1: Test Coverage & CI Guardrails
+- **As a** Maintainer, **I want** 95%+ test coverage on core logic, **So that** regressions are caught early.
+- **AC:** Vitest configured with coverage thresholds, `npm test` fails if coverage < 95% on `src/domains`.
 
 ---
 

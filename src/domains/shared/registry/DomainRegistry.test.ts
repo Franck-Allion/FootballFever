@@ -84,4 +84,65 @@ describe('DomainRegistry', () => {
         expect(retrieved).not.toBe(stadium);
         expect(Object.isFrozen(retrieved)).toBe(true);
     });
+
+    it('clears all collections when clear is called', () => {
+        const player = EntityFactory.createPlayer();
+        registry.registerPlayer(player);
+        
+        registry.clear();
+        
+        expect(registry.getPlayer(player.id)).toBeUndefined();
+    });
+
+    it('throws error when registering before schema is configured', () => {
+        DomainRegistry.resetInstance();
+        const newRegistry = DomainRegistry.getInstance();
+        
+        expect(() => newRegistry.registerPlayer({ id: '1' } as unknown as z.infer<typeof PlayerSchema>)).toThrow();
+    });
+
+    it('throws error when getting from unconfigured collection', () => {
+        DomainRegistry.resetInstance();
+        const newRegistry = DomainRegistry.getInstance();
+        
+        expect(() => newRegistry.getPlayer('1')).toThrow();
+    });
+
+    it('deep freezes complex objects', () => {
+        const ComplexSchema = zod.object({
+            id: zod.string(),
+            data: zod.object({
+                nested: zod.array(zod.number())
+            })
+        });
+        
+        registry.registerSchema('complex', ComplexSchema);
+        registry.register('complex', { id: 'c1', data: { nested: [1, 2] } });
+        
+        const retrieved = registry.get<zod.infer<typeof ComplexSchema>>('complex', 'c1');
+        expect(Object.isFrozen(retrieved.data)).toBe(true);
+        expect(Object.isFrozen(retrieved.data.nested)).toBe(true);
+    });
+
+    it('returns undefined when getting non-existent entity', () => {
+        expect(registry.getPlayer('non-existent')).toBeUndefined();
+    });
+
+    it('deepFreeze should handle null and non-object values gracefully', () => {
+        // We can't easily call private deepFreeze, but we can register objects with null/non-object values
+        const NullSchema = zod.object({
+            id: zod.string(),
+            data: zod.nullable(zod.any())
+        });
+        registry.registerSchema('nulltest', NullSchema);
+        registry.register('nulltest', { id: 'n1', data: null });
+        registry.register('nulltest', { id: 'n2', data: 42 });
+        
+        expect(registry.get('nulltest', 'n1')).toEqual({ id: 'n1', data: null });
+        expect(registry.get('nulltest', 'n2')).toEqual({ id: 'n2', data: 42 });
+    });
+
+    it('throws when getting from a non-existent collection', () => {
+        expect(() => registry.get('ghost', 'any')).toThrow();
+    });
 });

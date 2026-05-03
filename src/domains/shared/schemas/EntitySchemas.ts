@@ -41,5 +41,14 @@ export const TeamSchema = z.object({
     formation: z.string().min(1)
 }).strict();
 
+export const GameStateSchema = z.object({
+    id: z.string().min(1),
+    currentState: z.string().min(1),
+    prestige: z.number().int().min(0),
+    lastSaved: z.string().datetime()
+}).strict();
+
 export type Player = z.infer<typeof PlayerSchema>;
 export type Team = z.infer<typeof TeamSchema>;
+export type GameStateData = z.infer<typeof GameStateSchema>;
+

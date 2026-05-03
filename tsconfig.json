@@ -26,6 +26,7 @@
     "baseUrl": ".",
     "paths": {
       "@core/*": ["src/core/*"],
+      "@i18n/*": ["src/core/services/i18n/*"],
       "@domains/*": ["src/domains/*"],
       "@ui/*": ["src/presentation/*"],
       "@game/*": ["src/game/*"],
