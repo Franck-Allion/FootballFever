@@ -91,6 +91,7 @@ const HubScreen: React.FC = () => {
                             <option value="fr">FR</option>
                             <option value="en">EN</option>
                             <option value="es">ES</option>
+                            <option value="de">DE</option>
                         </select>
                     </div>
                 </header>
