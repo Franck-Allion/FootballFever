@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import { useEconomyStore } from '@core/store/useEconomyStore';
-import { useFlowStore } from '@core/store/useFlowStore';
 import { GameState } from '@core/fsm/GameState';
+import { FlowService } from '@core/fsm/FlowService';
 
 const startingEleven = [
     'M. Varga',
@@ -36,6 +36,7 @@ const resultLabels: Record<string, string> = {
 const HubScreen: React.FC = () => {
     const {
         teamName,
+        teamLogo,
         division,
         formation,
         overallRating,
@@ -45,7 +46,6 @@ const HubScreen: React.FC = () => {
         routeNodes,
     } = useSquadStore();
     const { prestige } = useEconomyStore();
-    const { transitionTo } = useFlowStore();
 
     const fatigueAvg = Math.max(0, 100 - staminaAvg);
     const moraleScore = moraleScoreByState[morale];
@@ -54,7 +54,7 @@ const HubScreen: React.FC = () => {
     const matchLocation = 'Domicile';
 
     const handlePlayMatch = () => {
-        transitionTo(GameState.MATCH_SIM);
+        FlowService.getInstance().navigateTo(GameState.MATCH_SIM);
     };
 
     return (
@@ -62,8 +62,8 @@ const HubScreen: React.FC = () => {
             <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-4 sm:px-6">
                 <header className="flex min-h-20 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#121212]/70 px-4 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded bg-[#39ff14] shadow-[0_0_18px_rgba(57,255,20,0.45)]">
-                            <span className="text-2xl font-black text-black">{teamName.slice(0, 1)}</span>
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded bg-black/40 shadow-[0_0_15px_rgba(57,255,20,0.15)] border border-white/5">
+                            <img src={teamLogo} alt={teamName} className="h-10 w-10 object-contain drop-shadow-[0_0_8px_rgba(57,255,20,0.3)]" />
                         </div>
                         <div className="min-w-0">
                             <h1 className="truncate text-xl font-black uppercase tracking-widest text-[#39ff14] drop-shadow-[0_0_8px_rgba(57,255,20,0.5)] sm:text-2xl">

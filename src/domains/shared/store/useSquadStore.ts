@@ -26,6 +26,7 @@ export interface ActiveSynergy {
 
 interface SquadState {
     teamName: string;
+    teamLogo: string;
     division: number;
     formation: string;
     overallRating: number;
@@ -46,6 +47,7 @@ interface SquadState {
 
 export const useSquadStore = create<SquadState>((set) => ({
     teamName: 'STRIKER_COMMAND',
+    teamLogo: '/assets/logo/logo-1.png',
     division: 4,
     formation: '4-4-2 DIAMOND',
     overallRating: 84,
