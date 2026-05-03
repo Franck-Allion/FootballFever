@@ -1,4 +1,4 @@
-import type { Translations } from '@i18n/locales/en';
+import type { Translations } from './Schema';
 
 export const fr: Translations = {
     common: {
@@ -14,12 +14,22 @@ export const fr: Translations = {
         play_match: 'JOUER LE MATCH',
         simulating_match: 'SIMULATION DU MATCH...',
         sprite_position: 'Position du Sprite',
-        persistence_recovered: 'La sauvegarde etait corrompue et a ete reinitialisee.'
+        persistence_recovered: 'La sauvegarde etait corrompue et a ete reinitialisee.',
+        game_title: 'FOOTBALL FEVER'
     },
     hub: {
         team_management: 'HUB - Gestion de l\'Équipe',
         toggle_phaser_scene: 'Basculer Scène Phaser',
         toggle_movement: 'Basculer Mouvement',
         add_fx_sprite: 'Ajouter Sprite FX'
+    },
+    debug: {
+        console_title: 'Console Système',
+        close_esc: 'FERMER [ESC]',
+        run: 'EXECUTER',
+        placeholder: 'Entrez une commande (ex: /add_prestige 1000)...'
+    },
+    settings: {
+        lang_label: 'Langue :'
     }
 };

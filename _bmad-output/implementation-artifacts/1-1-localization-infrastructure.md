@@ -32,6 +32,7 @@ so that I understand the gameplay mechanics and narrative.
 - [x] **Verification** (AC: 4, 6)
   - [x] Write unit tests for `LocalizationService` verifying key lookup and fallback.
   - [x] Verify that switching language updates the UI immediately.
+  - [x] Implement Zod validation for translation dictionaries (AC: 6).
 
 ### Review Follow-ups (AI)
 

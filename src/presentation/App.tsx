@@ -124,8 +124,14 @@ function App()
             )}
 
             {persistenceNotice && (
-                <div className="mb-4 p-2 bg-amber-500 text-black rounded border-2 border-amber-700">
-                    {t(persistenceNotice)}
+                <div className="mb-4 p-2 bg-amber-500 text-black rounded border-2 border-amber-700 flex justify-between items-center gap-4">
+                    <span>{t(persistenceNotice)}</span>
+                    <button 
+                        onClick={() => useFlowStore.getState().setPersistenceNotice(null)}
+                        className="bg-amber-700/20 hover:bg-amber-700/40 px-2 py-0.5 rounded text-xs font-bold"
+                    >
+                        ✕
+                    </button>
                 </div>
             )}
 
@@ -137,7 +143,7 @@ function App()
 
             {currentState === GameState.BOOT && (
                 <div className="text-center p-10 bg-blue-100 rounded-lg shadow-inner border-2 border-blue-300">
-                    <h1 className="text-3xl font-black text-blue-900 mb-2">FOOTBALL FEVER</h1>
+                    <h1 className="text-3xl font-black text-blue-900 mb-2">{t('common.game_title')}</h1>
                     <p className="text-blue-700 italic">{t('common.initializing')}</p>
                     <button className="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition-colors shadow" onClick={() => flowService.navigateTo(GameState.HUB)}>{t('common.press_start')}</button>
                 </div>

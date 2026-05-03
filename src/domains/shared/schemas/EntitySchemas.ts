@@ -21,7 +21,7 @@ export const PlayerStatsSchema = z.object({
     dribbling: z.number().min(0).max(100),
     defense: z.number().min(0).max(100),
     physical: z.number().min(0).max(100)
-}).strict();
+}).passthrough();
 
 export const PlayerSchema = z.object({
     id: z.string().min(1),
@@ -32,23 +32,23 @@ export const PlayerSchema = z.object({
     level: z.number().int().min(1),
     xp: z.number().int().min(0),
     age: z.number().int().min(15).max(45)
-}).strict();
+}).passthrough();
 
 export const TeamSchema = z.object({
     id: z.string().min(1),
     name: z.string().min(1),
     roster: z.array(z.union([PlayerSchema, z.string().min(1)])).min(1),
     formation: z.string().min(1)
-}).strict();
+}).passthrough();
 
 export const GameStateSchema = z.object({
     id: z.string().min(1),
     currentState: z.string().min(1),
+    currentDivision: z.number().int().min(1).default(1),
     prestige: z.number().int().min(0),
     lastSaved: z.string().datetime()
-}).strict();
+}).passthrough();
 
 export type Player = z.infer<typeof PlayerSchema>;
 export type Team = z.infer<typeof TeamSchema>;
 export type GameStateData = z.infer<typeof GameStateSchema>;
-

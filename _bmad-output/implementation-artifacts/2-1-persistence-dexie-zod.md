@@ -37,8 +37,12 @@ so that I can resume my career across multiple sessions without losing data.
 
 ### Review Follow-ups (AI)
 
-- [x] [AI-Review] Implement automatic recovery for corrupted persisted state (DB reset + default state recovery). (Severity: Medium)
-- [x] [AI-Review] Expose a user-facing recovery notice banner after automatic persistence reset. (Severity: Medium)
+- [x] [AI-Review] Implement automatic recovery for corrupted persisted state (surgical reset). (Severity: Medium)
+- [x] [AI-Review] Expose a user-facing dismissible recovery notice banner. (Severity: Medium)
+- [x] [AI-Review] Implement debounced saves (1s) to prevent write-amplification. (Severity: High)
+- [x] [AI-Review] Use `.passthrough()` in Zod schemas for forward compatibility. (Severity: High)
+- [x] [AI-Review] Disable redundant Zustand LocalStorage persistence. (Severity: Medium)
+- [x] [AI-Review] Implement per-record error isolation when loading lists. (Severity: High)
 
 ## Dev Notes
 

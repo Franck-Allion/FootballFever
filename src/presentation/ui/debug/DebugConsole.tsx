@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDebugStore } from '@core/store/useDebugStore';
 import { DebugCommandService } from '@core/services/debug/DebugCommandService';
 import { LogLevel } from '@core/services/logger/LoggerService';
+import { useTranslation } from '@ui/hooks/useTranslation';
 
 export const DebugConsole: React.FC = () => {
+    const { t } = useTranslation();
     const { isVisible, logs, toggleVisibility } = useDebugStore();
     const [command, setCommand] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
@@ -59,12 +61,12 @@ export const DebugConsole: React.FC = () => {
     return (
         <div className="fixed inset-0 z-[9999] flex flex-col bg-black/80 text-white font-mono text-xs p-4 pointer-events-none">
             <div className="flex justify-between items-center mb-2 pointer-events-auto">
-                <h2 className="text-sm font-black tracking-widest text-yellow-500 uppercase">System Console</h2>
+                <h2 className="text-sm font-black tracking-widest text-yellow-500 uppercase">{t('debug.console_title')}</h2>
                 <button 
                     onClick={toggleVisibility}
                     className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold"
                 >
-                    CLOSE [ESC]
+                    {t('debug.close_esc')}
                 </button>
             </div>
 
@@ -96,14 +98,14 @@ export const DebugConsole: React.FC = () => {
                     onChange={(e) => setCommand(e.target.value)}
                     onKeyDown={handleInputKeyDown}
                     onKeyUp={handleInputKeyDown}
-                    placeholder="Enter command (e.g. /add_prestige 1000)..."
+                    placeholder={t('debug.placeholder')}
                     className="flex-1 bg-white/10 border border-white/30 rounded px-2 py-2 outline-none focus:border-yellow-500 focus:bg-white/20 transition-all"
                 />
                 <button 
                     type="submit"
                     className="bg-yellow-600 hover:bg-yellow-700 text-black font-black px-4 py-2 rounded"
                 >
-                    RUN
+                    {t('debug.run')}
                 </button>
             </form>
         </div>

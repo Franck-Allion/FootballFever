@@ -2,7 +2,7 @@ import { useTranslation } from '@ui/hooks/useTranslation';
 import type { Language } from '@i18n/LocalizationService';
 
 export function LanguageSelector() {
-    const { language, setLanguage } = useTranslation();
+    const { t, language, setLanguage } = useTranslation();
 
     const languages: Array<{ code: Language; label: string }> = [
         { code: 'en', label: 'English' },
@@ -13,7 +13,7 @@ export function LanguageSelector() {
 
     return (
         <div className="flex items-center gap-2 bg-gray-800 p-2 rounded shadow-inner">
-            <span className="text-gray-400 text-xs font-bold uppercase">Lang:</span>
+            <span className="text-gray-400 text-xs font-bold uppercase">{t('settings.lang_label')}</span>
             <select 
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as Language)}

@@ -12,17 +12,13 @@ interface FlowState {
 }
 
 export const useFlowStore = create<FlowState>()(
-    persist(
-        (set) => ({
-            currentState: GameState.BOOT,
-            error: null,
-            persistenceNotice: null,
-            setGameState: (state) => set({ currentState: state, error: null }),
-            setError: (error) => set({ error }),
-            setPersistenceNotice: (persistenceNotice) => set({ persistenceNotice }),
-        }),
-        {
-            name: 'football-fever-flow-storage',
-        }
-    )
+    (set) => ({
+        currentState: GameState.BOOT,
+        error: null,
+        persistenceNotice: null,
+        setGameState: (state) => set({ currentState: state, error: null }),
+        setError: (error) => set({ error }),
+        setPersistenceNotice: (persistenceNotice) => set({ persistenceNotice }),
+    })
 );
+

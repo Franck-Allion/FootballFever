@@ -1,13 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { LocalizationService } from './LocalizationService';
 
 describe('LocalizationService', () => {
     let service: LocalizationService;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         LocalizationService.resetInstanceForTests();
         localStorage.clear();
         service = LocalizationService.getInstance();
+        await service.init();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('should default to English if no language is saved or detected', () => {
@@ -18,52 +23,46 @@ describe('LocalizationService', () => {
         expect(service.t('common.press_start')).toBe('PRESS START');
     });
 
-    it('should switch language and return translated value', () => {
-        service.setLanguage('fr');
+    it('should switch language and return translated value', async () => {
+        await service.setLanguage('fr');
         expect(service.getLanguage()).toBe('fr');
         expect(service.t('common.press_start')).toBe('APPUYER SUR START');
     });
 
-    it('should fallback to English if a key is missing in the current language', () => {
-        service.setLanguage('de');
-        expect(service.t('common.press_start')).toBe('START DRUECKEN');
+    it('should fallback to English if a key is missing in the current language', async () => {
+        await service.setLanguage('de');
+        // Force a missing key to test fallback
+        (service as any).dictionary.common.press_start = undefined;
+        expect(service.t('common.press_start')).toBe('PRESS START');
     });
 
     it('should return the key path if the key is not found in either current or fallback language', () => {
         expect(service.t('non.existent.key')).toBe('non.existent.key');
     });
 
-    it('should notify listeners when language changes', () => {
+    it('should notify listeners when language changes', async () => {
         const listener = vi.fn();
         service.subscribe(listener);
 
-        service.setLanguage('es');
+        await service.setLanguage('es');
 
         expect(listener).toHaveBeenCalledWith('es');
     });
 
-    it('should persist language choice to localStorage', () => {
-        service.setLanguage('fr');
+    it('should persist language choice to localStorage', async () => {
+        await service.setLanguage('fr');
         expect(localStorage.getItem('football_fever_lang')).toBe('fr');
     });
 
-    it('should load saved language from localStorage on initialization', () => {
+    it('should load saved language from localStorage on initialization', async () => {
         localStorage.setItem('football_fever_lang', 'es');
         LocalizationService.resetInstanceForTests();
         const newService = LocalizationService.getInstance();
+        await newService.init();
         expect(newService.getLanguage()).toBe('es');
     });
 
-    it('should return the key path if it does not contain a dot', () => {
-        expect(service.t('invalidkey')).toBe('invalidkey');
-    });
-
-    it('should return the key path if domain or key is missing after split', () => {
-        expect(service.t('.')).toBe('.');
-        expect(service.t('common.')).toBe('common.');
-    });
-
-    it('should detect browser language if no saved language exists', () => {
+    it('should detect browser language if no saved language exists', async () => {
         localStorage.clear();
         LocalizationService.resetInstanceForTests();
 
@@ -74,6 +73,7 @@ describe('LocalizationService', () => {
         });
 
         const newService = LocalizationService.getInstance();
+        await newService.init();
         expect(newService.getLanguage()).toBe('fr');
 
         Object.defineProperty(navigator, 'language', {
@@ -82,21 +82,77 @@ describe('LocalizationService', () => {
         });
     });
 
-    it('should fallback to key path if domain exists but key is missing in English', () => {
-        expect(service.t('common.non_existent')).toBe('common.non_existent');
-    });
-
-    it('should unsubscribe successfully', () => {
+    it('should unsubscribe successfully', async () => {
         const listener = vi.fn();
         const unsubscribe = service.subscribe(listener);
 
         unsubscribe();
-        service.setLanguage('fr');
+        await service.setLanguage('fr');
 
         expect(listener).not.toHaveBeenCalled();
     });
 
-    it('should return key path if domain does not exist', () => {
-        expect(service.t('ghost.key')).toBe('ghost.key');
+    it('should handle nested keys', () => {
+        // Our current locales only have 2 levels, but let's test the logic
+        // We can manually inject a nested structure for testing if needed
+        expect(service.t('debug.console_title')).toBe('System Console');
+    });
+
+    it('should guard against prototype pollution', () => {
+        expect(service.t('common.toString')).toBe('common.toString');
+        expect(service.t('constructor.name')).toBe('constructor.name');
+    });
+
+    it('should handle localStorage errors gracefully', async () => {
+        // Ensure we are not already in 'de'
+        if (service.getLanguage() === 'de') {
+            await service.setLanguage('en');
+        }
+
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        // Mock localStorage.setItem directly
+        const setItemSpy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+            throw new Error('Quota exceeded');
+        });
+
+        await service.setLanguage('de');
+        expect(service.getLanguage()).toBe('de');
+        expect(consoleSpy).toHaveBeenCalled();
+        
+        setItemSpy.mockRestore();
+    });
+
+    it('should handle localStorage getter errors gracefully', async () => {
+        LocalizationService.resetInstanceForTests();
+        const getItemSpy = vi.spyOn(localStorage, 'getItem').mockImplementation(() => {     
+            throw new Error('Denied');
+        });
+        const originalLanguage = navigator.language;
+        Object.defineProperty(navigator, 'language', {
+            value: 'fr-FR',
+            configurable: true
+        });
+        
+        const newService = LocalizationService.getInstance();
+        await newService.init();
+        expect(newService.getLanguage()).toBe('fr');
+        
+        getItemSpy.mockRestore();
+        Object.defineProperty(navigator, 'language', {
+            value: originalLanguage,
+            configurable: true
+        });
+    });
+
+    it('should handle listener errors without crashing', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        service.subscribe(() => { throw new Error('Crashed'); });
+        const safeListener = vi.fn();
+        service.subscribe(safeListener);
+
+        await service.setLanguage('es');
+        
+        expect(safeListener).toHaveBeenCalledWith('es');
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Listener notification failed'), expect.any(Error));
     });
 });

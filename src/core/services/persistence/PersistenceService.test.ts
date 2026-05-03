@@ -11,9 +11,8 @@ describe('PersistenceService', () => {
     let dbService: DatabaseService;
 
     beforeEach(async () => {
-        useFlowStore.getState().setGameState(GameState.BOOT);
-        useFlowStore.getState().setPersistenceNotice(null);
-        useEconomyStore.getState().setPrestige(0);
+        useFlowStore.setState({ currentState: GameState.BOOT, persistenceNotice: null });
+        useEconomyStore.setState({ prestige: 0 });
 
         DatabaseService.resetInstanceForTests();
         dbService = DatabaseService.getInstance({ indexedDB, IDBKeyRange });
@@ -24,14 +23,22 @@ describe('PersistenceService', () => {
     });
 
     afterEach(() => {
+        service.destroy();
         vi.restoreAllMocks();
+        vi.useRealTimers();
     });
 
-    it('should initialize and subscribe to stores', () => {
+    it('should initialize and subscribe to stores with debounce', async () => {
+        vi.useFakeTimers();
         const triggerSaveSpy = vi.spyOn(service, 'triggerSave');
         service.init();
 
         useEconomyStore.getState().setPrestige(100);
+        
+        // Should not be called immediately due to debounce
+        expect(triggerSaveSpy).not.toHaveBeenCalled();
+
+        vi.runAllTimers();
 
         expect(triggerSaveSpy).toHaveBeenCalled();
     });
@@ -41,6 +48,7 @@ describe('PersistenceService', () => {
         useEconomyStore.getState().setPrestige(500);
         useFlowStore.getState().setGameState(GameState.HUB);
 
+        // Manually call triggerSave to bypass debounce/timers for simplicity in this test
         await service.triggerSave();
 
         const saved = await dbService.loadGlobalState();
@@ -53,6 +61,7 @@ describe('PersistenceService', () => {
         const stateData = {
             id: 'current_session',
             currentState: GameState.MATCH_SIM,
+            currentDivision: 1,
             prestige: 1500,
             lastSaved: new Date().toISOString()
         };
@@ -66,7 +75,7 @@ describe('PersistenceService', () => {
 
     it('should handle database errors gracefully during save', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        vi.spyOn(dbService, 'saveGlobalState').mockRejectedValue(new Error('DB Error'));
+        vi.spyOn(dbService, 'saveGlobalState').mockRejectedValue(new Error('DB Error'));    
 
         await service.triggerSave();
 
@@ -75,10 +84,10 @@ describe('PersistenceService', () => {
 
     it('should reset persisted state and set recovery notice on corrupted load', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        vi.spyOn(dbService, 'loadGlobalState').mockRejectedValue(new Error('Corrupted'));
+        vi.spyOn(dbService, 'loadGlobalState').mockRejectedValue(new Error('Corrupted'));   
 
-        useFlowStore.getState().setGameState(GameState.HUB);
-        useEconomyStore.getState().setPrestige(222);
+        useFlowStore.setState({ currentState: GameState.HUB });
+        useEconomyStore.setState({ prestige: 222 });
 
         await service.loadPersistedState();
 
@@ -86,5 +95,26 @@ describe('PersistenceService', () => {
         expect(useFlowStore.getState().currentState).toBe(GameState.BOOT);
         expect(useEconomyStore.getState().prestige).toBe(0);
         expect(useFlowStore.getState().persistenceNotice).toBe('common.persistence_recovered');
+    });
+
+    it('should handle critical failure during recovery', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(dbService, 'loadGlobalState').mockRejectedValue(new Error('Corrupted'));
+
+        // Mock setGameState to throw error during recovery
+        const originalSetState = useFlowStore.setState;
+        vi.spyOn(useFlowStore, 'setState').mockImplementation(() => {
+            throw new Error('Critical store error');
+        });
+
+        // Ensure we cause a failure inside the try block of handleCorruptedState
+        // By spying on useFlowStore.getState
+        vi.spyOn(useFlowStore, 'getState').mockReturnValue({
+            setGameState: () => { throw new Error('Critical store error'); }
+        } as any);
+
+        await service.loadPersistedState();
+
+        expect(consoleSpy).toHaveBeenCalledWith('PersistenceService: Critical failure during recovery', expect.any(Error));
     });
 });

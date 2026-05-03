@@ -57,7 +57,17 @@ export class DatabaseService {
 
     public async loadAllPlayers(): Promise<Player[]> {
         const data = await this.db.players.toArray();
-        return data.map(p => PlayerSchema.parse(p));
+        const results: Player[] = [];
+        
+        for (const item of data) {
+            try {
+                results.push(PlayerSchema.parse(item));
+            } catch (e) {
+                console.warn(`DatabaseService: Skipping corrupted player record: ${item.id}`, e);
+            }
+        }
+        
+        return results;
     }
 
     public async deletePlayer(id: string): Promise<void> {
@@ -77,7 +87,17 @@ export class DatabaseService {
 
     public async loadAllTeams(): Promise<Team[]> {
         const data = await this.db.teams.toArray();
-        return data.map(t => TeamSchema.parse(t));
+        const results: Team[] = [];
+
+        for (const item of data) {
+            try {
+                results.push(TeamSchema.parse(item));
+            } catch (e) {
+                console.warn(`DatabaseService: Skipping corrupted team record: ${item.id}`, e);
+            }
+        }
+
+        return results;
     }
 
     // Global Game State

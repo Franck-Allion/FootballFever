@@ -1,6 +1,6 @@
 # Story 4.1: Test Coverage & CI Guardrails
 
-Status: review
+Status: done
 
 ## Story
 
@@ -35,6 +35,18 @@ so that regressions are caught immediately and the codebase remains robust durin
   - [x] Add missing unit tests for `DomainRegistry`, `PersistenceService`, `LocalizationService`, and `LoggerService` to reach the 95% threshold.
 - [x] **Documentation** (AC: 4)
   - [x] Document the "Pattern AAA (Arrange-Act-Assert)" requirement for all tests in `docs/TESTING.md`.
+
+### Review Findings
+
+- [x] [Review][Patch] Brittle dynamic imports in persistence/localization [src/core/services/i18n/LocalizationService.ts]
+- [x] [Review][Patch] Async race conditions in the persistence layer (overlapping triggerSave calls) [src/core/services/persistence/PersistenceService.ts]
+- [x] [Review][Patch] Silent initialization failures (a failure in localization.init() or persistence.loadPersistedState() will stop the app from rendering, resulting in a white screen) [src/main.tsx]
+- [x] [Review][Patch] LocaleSchema created but not used for runtime validation in LocalizationService [src/core/services/i18n/LocalizationService.ts]
+- [x] [Review][Patch] State inconsistency: if a dynamic locale import fails during setLanguage, currentLanguage is updated but keeps old dictionary [src/core/services/i18n/LocalizationService.ts]
+- [x] [Review][Patch] Redundant writes: The store hydration process triggers persistence subscribers, causing an immediate redundant save back to IndexedDB [src/core/services/persistence/PersistenceService.ts]
+- [x] [Review][Patch] destroy() does not account for in-flight async operations [src/core/services/persistence/PersistenceService.ts]
+- [x] [Review][Patch] Fallback logic test weakness in localization tests [src/core/services/i18n/LocalizationService.test.ts]
+- [x] [Review][Defer] Missing config files from patch — deferred, pre-existing
 
 ## Dev Notes
 
