@@ -82,6 +82,15 @@ FootballFever is a Sports/Roguelite hybrid built on a **Phaser 3.90 + React 19**
 - **Isolation :** Code pur TS mathématique. Interdiction d'accès au DOM.
 - **Performance :** Garantit 60 FPS constants malgré la simulation x15.
 
+### Player Catalog System (Static Data)
+- **Structure :** Divisée par divisions (`d1` à `d4`) pour limiter l'empreinte mémoire lors du chargement initial.
+- **Organization :**
+    - `PlayerCatalog.ts` : Point d'entrée consolidé (exporte `PLAYER_CATALOG`).
+    - `PlayerCatalog.dX.ts` : Données brutes par division.
+    - `PlayerCatalog.types.ts` : Définitions d'interfaces (`CatalogPlayer`).
+- **Generation :** Les fichiers sont générés via `scripts/generate-player-catalog.mjs`. Toute modification manuelle est proscrite ; passer par le générateur ou le pool de noms.
+- **Integration :** Utilisé comme source de vérité pour le recrutement, la draft et l'initialisation des adversaires.
+
 ---
 
 ## Cross-cutting Concerns (The Technical Constitution)

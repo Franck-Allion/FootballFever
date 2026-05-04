@@ -53,6 +53,12 @@ This document contains the absolute rules and patterns that **must** be followed
 - **Rule:** Toutes les opérations DB passent par le `DatabaseService`.
 - **Schema-First :** Utiliser `z.infer<typeof schema>` pour générer les types TypeScript à partir de Zod, assurant une synchronisation parfaite entre la save et le code.
 
+### 6. Registry & Static Data (Player Catalog)
+- **Rule :** Interdiction d'éditer manuellement les fichiers `PlayerCatalog.dX.ts`.
+- **Source of Truth :** `scripts/generate-player-catalog.mjs` est le seul maître.
+- **Usage :** Utiliser uniquement l'export consolidé `PLAYER_CATALOG` de `PlayerCatalog.ts` pour les recherches globales.
+- **Extension :** Pour ajouter des noms ou des types de joueurs, modifier `scripts/data/player-name-pool.json`.
+
 ---
 
 ## 📜 Critical Implementation Rules

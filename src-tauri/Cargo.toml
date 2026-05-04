@@ -1,0 +1,17 @@
+[package]
+name = "football-fever"
+version = "0.1.0"
+description = "FootballFever desktop wrapper"
+authors = ["Fal"]
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "football_fever_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }

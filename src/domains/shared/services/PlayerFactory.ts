@@ -1,7 +1,6 @@
 import { Player } from '../schemas/EntitySchemas';
 import { createPRNG } from '@utils/Random';
 import { PLAYER_CATALOG } from '../registry/PlayerCatalog';
-import type { CatalogPlayer } from '../registry/PlayerCatalog';
 
 /**
  * Factory service to pick players from catalog and initialize squads.
