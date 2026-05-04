@@ -29,6 +29,9 @@ cargo --version
 
 If either command is unavailable, install Rust before running `npm run desktop:build`.
 
+### Windows Specifics
+For distribution on Windows, the generated portable `.exe` in `target/release` requires the **WebView2 Runtime** to be installed on the target machine. It is **strongly recommended** to distribute the `.msi` or NSIS setup (`-setup.exe`) files, as they include a bootstrapper to install WebView2 if missing.
+
 ## Persistence Verification
 
 The desktop app must continue to use the existing IndexedDB/Dexie persistence path through `DatabaseService` and `PersistenceService`.

@@ -104,8 +104,9 @@ development_status:
   epic-21-retrospective: optional
   epic-22: backlog
   epic-22-retrospective: optional
-  epic-23: in-progress
-  23-1-tauri-desktop-build: in-progress
+  epic-23: done
+  23-1-tauri-desktop-build: done
   epic-23-retrospective: optional
   epic-24: backlog
   epic-24-retrospective: optional
+ve: optional

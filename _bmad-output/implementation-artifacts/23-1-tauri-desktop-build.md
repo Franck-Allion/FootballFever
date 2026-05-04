@@ -1,6 +1,6 @@
 # Story 23.1: Tauri Desktop Build
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -22,10 +22,10 @@ so that I can sell FootballFever through desktop stores.
 - [x] Add Tauri v2 to the existing app (AC: 1, 2)
   - [x] Install the official Tauri v2 CLI/package dependencies for an npm project.
   - [x] Initialize `src-tauri/` with app identity for FootballFever.
-  - [x] Keep the current React/Phaser entrypoints unchanged unless Tauri requires a minimal asset/path compatibility fix.
+  - [x] Keep the current React/Phaser entrypoints unchanged unless Tauri requires a minimal asset/path compatibility fix.    
 - [x] Configure Vite/Tauri integration (AC: 2, 3)
   - [x] Add `tauri`, `desktop:dev`, and `desktop:build` scripts to `package.json`.
-  - [x] Configure Tauri `build.beforeDevCommand`, `build.beforeBuildCommand`, `build.devUrl`, and `build.frontendDist`.
+  - [x] Configure Tauri `build.beforeDevCommand`, `build.beforeBuildCommand`, `build.devUrl`, and `build.frontendDist`.      
   - [x] Ensure the Vite dev server uses a fixed port compatible with Tauri. Current project port is `8080`; if changed, update both Vite and Tauri together.
 - [ ] Validate desktop persistence (AC: 5)
   - [x] Use the existing Dexie-backed `DatabaseService` and `PersistenceService`; do not introduce a separate native save path in this story.
@@ -44,14 +44,14 @@ so that I can sell FootballFever through desktop stores.
 
 ### Scope Boundaries
 
-- This story is packaging infrastructure. Do not implement new gameplay, economy, match simulation, roster, or UI features.
+- This story is packaging infrastructure. Do not implement new gameplay, economy, match simulation, roster, or UI features.  
 - Do not replace the existing Vite config layout. The project already uses `vite/config.dev.mjs` and `vite/config.prod.mjs`; wire Tauri to those scripts through `npm run dev` and `npm run build`.
 - Do not create a second persistence layer. Desktop persistence acceptance is specifically about proving the current IndexedDB/Dexie path works in the native WebView.
 
 ### Current Project State
 
 - There is no `src-tauri/` directory yet.
-- `package.json` currently has `dev`, `build`, `catalog:players`, `test`, and `test:ci` scripts, but no Tauri scripts.
+- `package.json` currently has `dev`, `build`, `catalog:players`, `test`, and `test:ci` scripts, but no Tauri scripts.       
 - `npm` is the package manager; `package-lock.json` exists and must be updated if dependencies are added.
 - Vite dev config uses port `8080` and `base: './'`.
 - Vite production config outputs to the default `dist` directory and already uses `base: './'`, which is appropriate for packaged desktop assets.
@@ -66,7 +66,7 @@ so that I can sell FootballFever through desktop stores.
   - `build.beforeBuildCommand`: `npm run build`
   - `build.devUrl`: `http://localhost:8080` unless the Vite port is intentionally changed
   - `build.frontendDist`: `../dist`
-- Tauri expects a stable dev URL. If the Vite port is unavailable, fail visibly instead of silently moving to another port.
+- Tauri expects a stable dev URL. If the Vite port is unavailable, fail visibly instead of silently moving to another port.  
 - Add Tauri-specific Vite watch ignores for `src-tauri/**` if needed to avoid frontend rebuild loops.
 
 ### Signing Readiness
@@ -187,3 +187,12 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-05-04: Added Tauri v2 desktop scaffold, npm scripts, Vite dev-server alignment, signing/persistence docs, and config guardrail test. Installed Rustup and verified Windows desktop bundles. Story remains `in-progress` pending manual Tauri WebView persistence verification.
+
+### Review Findings
+
+- [ ] [Review][Decision] Identifier Lock-in & Persistence Origin — The identifier `com.fal.footballfever` is the key for local storage. Changing it later will lose all user saves. Also, there's no migration strategy between browser and desktop saves (origin difference).
+- [ ] [Review][Patch] Critical Security Risk - Disabled CSP [src-tauri/tauri.conf.json:23]
+- [ ] [Review][Patch] Brittle Path Resolution in Tests [src/core/services/desktop/TauriConfig.test.ts:28]
+- [ ] [Review][Patch] Missing WebView2 Runtime Documentation for Windows [docs/TAURI_DESKTOP.md]
+- [ ] [Review][Patch] Resolution Mismatch (Tauri vs Phaser) [src-tauri/tauri.conf.json:17]
+- [x] [Review][Defer] Pre-existing Test Failures in Domain Registry [src/domains/shared/registry/DomainRegistry.test.ts] — deferred, pre-existing

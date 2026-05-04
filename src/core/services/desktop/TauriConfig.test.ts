@@ -25,7 +25,8 @@ const readJson = <T>(path: string): T => {
 describe('Tauri desktop configuration', () => {
     it('should expose desktop scripts and align Tauri with the Vite build contract', () => {
         // Arrange
-        const root = process.cwd();
+        // Use a relative path from this file to reach the root
+        const root = join(__dirname, '../../../../');
         const packageJson = readJson<PackageJson>(join(root, 'package.json'));
         const tauriConfig = readJson<TauriConfig>(join(root, 'src-tauri', 'tauri.conf.json'));
 

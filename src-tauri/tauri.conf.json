@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "FootballFever",
   "version": "0.1.0",
-  "identifier": "com.fal.footballfever",
+  "identifier": "com.ff.game",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -16,12 +16,12 @@
         "width": 1280,
         "height": 720,
         "minWidth": 1024,
-        "minHeight": 640,
+        "minHeight": 720,
         "resizable": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset:; font-src 'self'; connect-src 'self' http://localhost:8080"
     }
   },
   "bundle": {
