@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "vite --config vite/config.dev.mjs",
     "build": "vite build --config vite/config.prod.mjs",
+    "catalog:players": "node scripts/generate-player-catalog.mjs",
     "test": "vitest",
     "test:ci": "vitest run --coverage"
   },

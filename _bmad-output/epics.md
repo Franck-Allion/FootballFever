@@ -73,7 +73,7 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 
 ---
 
-## Detailed Epics & Stories (Phase 1 & 2 Focus)
+## Detailed Epics & Stories
 
 ### Epic 00: Fondations Techniques
 *Goal: Socle Vite/React/Tauri stable et typé.*
@@ -184,7 +184,42 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 
 #### Story 12.2: Full Commentary Catalog Implementation
 - **As a** Player, **I want** every match action to generate specific and varied commentary, **So that** I can follow the match precisely as described in the algorithm.
-- **AC:** Implementation of the complete catalog from `algorithm.md` (Passes, Duels, Pressing, Corners, Injuries, etc.) with localized variations.
+- **AC:** Implementation of the complete catalog from `algorithm.md` (Passes, Duels, Pressing, Corners, Injuries, etc.) with localized variations (300+ phrases).
+
+---
+
+### Epic 13: Gestion d'Effectif (11 + Banc)
+*Goal: Gestion des joueurs et compositions.*
+
+#### Story 13.1: Roster Data & Store Integration
+- **As a** Manager, **I want** a real squad of 20-25 players with distinct stats and rarities, **So that** my tactical choices matter.
+- **AC:** Store initialized with dynamic roster, replacement of hardcoded Hub lists with real player data.
+
+#### Story 13.2: Dynamic Team Rating Calculator
+- **As a** Tactician, **I want** my team's overall rating to update based on my current lineup, **So that** I can measure the impact of my changes.
+- **AC:** Formula-based overall calculation (weighted stats per position) updating in real-time.
+
+#### Story 13.3: Drag & Drop Lineup Editor
+- **As a** Coach, **I want** to easily swap players between the pitch and the bench, **So that** I can optimize my tactics.
+- **AC:** Implementation of a Drag & Drop interface in the Roster screen, with automatic validation of the formation.
+
+---
+
+### Epic 14: Gestion Humaine (Fatigue/Blessures)
+*Goal: Impact physique et moral sur le long terme.*
+
+#### Story 14.1: Dynamic Fatigue & Morale System
+- **As a** Coach, **I want** players' stamina and morale to evolve during and between matches, **So that** I have to manage my squad's rotation.
+- **AC:** In-match fatigue drain and post-match recovery/morale adjustment based on results.
+
+---
+
+### Epic 15: Événements Coach Choice
+*Goal: Interactivité et décisions tactiques critiques.*
+
+#### Story 15.1: Interactive Match Breakpoints
+- **As a** Manager, **I want** the match simulation to pause during critical moments (Penalty, Red Card, Late Game), **So that** I can make high-stakes tactical decisions.
+- **AC:** Implementation of the 10 critical choice types from `algorithm.md` (Penalty taker, Free kick routine, Injury management, etc.) with immediate impact on the simulation engine.
 
 ---
 

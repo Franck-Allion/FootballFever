@@ -1,38 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import { useEconomyStore } from '@core/store/useEconomyStore';
 import { GameState } from '@core/fsm/GameState';
 import { FlowService } from '@core/fsm/FlowService';
 import ProgressPanel from '../shared/ProgressPanel';
 import ActionTile from '../shared/ActionTile';
-
-const startingEleven = [
-    'M. Varga',
-    'L. Chen',
-    'R. Diallo',
-    'T. Okafor',
-    'N. Silva',
-    'A. Novak',
-    'S. Ito',
-    'J. Morel',
-    'K. Mensah',
-    'E. Cruz',
-    'P. Laurent',
-];
-
-const substitutes = ['B. Meyer', 'Y. Haddad', 'C. Rossi', 'D. Costa', 'F. Park'];
-
-const moraleScoreByState = {
-    LOW: 24,
-    STABLE: 55,
-    HIGH: 78,
-    EXCESSIVE: 94,
-} as const;
+import { FieldPlayerStats } from '@domains/shared/schemas/EntitySchemas';
 
 const resultLabels: Record<string, string> = {
     W: 'V',
     D: 'N',
     L: 'D',
+};
+
+const rarityColors: Record<string, string> = {
+    Common: 'text-gray-400',
+    Rare: 'text-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]',
+    Epic: 'text-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]',
+    Legendary: 'text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]',
 };
 
 const HubScreen: React.FC = () => {
@@ -46,12 +31,20 @@ const HubScreen: React.FC = () => {
         morale,
         streak,
         routeNodes,
+        roster,
+        initializeRoster,
     } = useSquadStore();
     const { prestige } = useEconomyStore();
     const [language, setLanguage] = useState('fr');
 
+    // Initialize roster if empty or re-initialize to apply new 24-player rule
+    useEffect(() => {
+        if (roster.length < 24) {
+            initializeRoster(true);
+        }
+    }, [roster.length, initializeRoster]);
+
     const fatigueAvg = Math.max(0, 100 - staminaAvg);
-    const moraleScore = moraleScoreByState[morale];
     const nextMatch = routeNodes.find((node) => node.status === 'current' && node.type === 'match');
     const isMercatoOpen = routeNodes.some((node) => node.status === 'current' && node.type === 'mercato');
     const matchLocation = 'Domicile';
@@ -59,6 +52,12 @@ const HubScreen: React.FC = () => {
     const handlePlayMatch = () => {
         FlowService.getInstance().navigateTo(GameState.MATCH_SIM);
     };
+
+    // Logic to pick "best" players for display (simplified until 13.2)
+    const sortedRoster = [...roster].sort((a, b) => b.overallRating - a.overallRating);
+
+    const startingEleven = sortedRoster.slice(0, 11);
+    const substitutes = sortedRoster.slice(11, 17);
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#e3e2e2] pb-10 font-['Space_Grotesk'] selection:bg-[#39ff14]/30 overflow-x-hidden">
@@ -97,7 +96,7 @@ const HubScreen: React.FC = () => {
                 </header>
 
                 <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <ProgressPanel label="Moral de l'equipe" value={moraleScore} status={morale} tone="positive" />
+                    <ProgressPanel label="Moral de l'equipe" value={morale} status={`${morale}%`} tone="positive" />
                     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 shadow-inner backdrop-blur-2xl">
                         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Serie en cours</p>
                         <div className="mt-4 flex items-center justify-between gap-2" aria-label={`Derniers résultats: ${streak.slice(-5).join(', ')}`}>
@@ -152,14 +151,28 @@ const HubScreen: React.FC = () => {
                                 </div>
                                 <span className="material-symbols-outlined rounded bg-black/50 p-3 text-3xl text-[#39ff14] shadow-[0_0_14px_rgba(57,255,20,0.25)]" aria-hidden="true">groups</span>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] font-bold uppercase tracking-wide text-white/75 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-2">
                                 {startingEleven.map((player) => (
-                                    <span key={player} className="truncate">{player}</span>
+                                    <div key={player.id} className="flex items-center gap-2 min-w-0">
+                                        <div className="h-6 w-6 shrink-0 rounded-full bg-black/40 border border-white/10 overflow-hidden">
+                                            <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
+                                        </div>
+                                        <span className={`truncate text-[11px] font-bold uppercase tracking-wide ${rarityColors[player.rarity]}`}>
+                                            {player.name}
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
                             <div className="mt-auto border-t border-white/10 pt-3">
                                 <p className="text-[9px] font-black uppercase tracking-[0.24em] text-white/30">Remplacants</p>
-                                <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-wide text-white/45">{substitutes.join(' - ')}</p>
+                                <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] font-bold uppercase tracking-wide text-white/45">
+                                    {substitutes.map((player, i) => (
+                                        <React.Fragment key={player.id}>
+                                            {i > 0 && <span>-</span>}
+                                            <span className={rarityColors[player.rarity]}>{player.name}</span>
+                                        </React.Fragment>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </button>

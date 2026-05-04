@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { Player } from '../schemas/EntitySchemas';
+import { persist } from 'zustand/middleware';
+import { Player, FieldPlayerStats } from '../schemas/EntitySchemas';
+import { PlayerFactory } from '../services/PlayerFactory';
 
 export interface TimelineNode {
     id: string;
@@ -8,13 +10,6 @@ export interface TimelineNode {
     status: 'completed' | 'current' | 'locked';
     opponent?: string;
     difficulty?: 'EASY' | 'NORMAL' | 'HARD' | 'CRITICAL';
-    result?: 'W' | 'L' | 'D';
-}
-
-export interface TeamComposites {
-    shooting: number;
-    control: number;
-    defense: number;
 }
 
 export interface ActiveSynergy {
@@ -32,9 +27,14 @@ interface SquadState {
     division: number;
     formation: string;
     overallRating: number;
-    composites: TeamComposites;
+    composites: {
+        shooting: number;
+        passing: number;
+        defense: number;
+        physical: number;
+    };
     staminaAvg: number;
-    morale: MoraleState;
+    morale: number; // 0-100 as per schema
     streak: string[];
     routeNodes: TimelineNode[];
     activeSynergies: ActiveSynergy[];
@@ -45,37 +45,78 @@ interface SquadState {
     setDivision: (division: number) => void;
     setFormation: (formation: string) => void;
     setOverallRating: (rating: number) => void;
+    initializeRoster: (force?: boolean) => void;
 }
 
-export const useSquadStore = create<SquadState>((set) => ({
-    teamName: 'STRIKER_COMMAND',
-    teamLogo: '/assets/logo/logo-1.png',
-    division: 4,
-    formation: '4-4-2 DIAMOND',
-    overallRating: 84,
-    composites: {
-        shooting: 78,
-        control: 82,
-        defense: 72
-    },
-    staminaAvg: 68,
-    morale: 'EXCESSIVE',
-    streak: ['W', 'W', 'W', 'L', 'W'],
-    routeNodes: [
-        { id: '1', type: 'match', label: 'Match 12', status: 'completed', opponent: 'NEON_CITY', result: 'W' },
-        { id: '2', type: 'match', label: 'Match 13', status: 'completed', opponent: 'CYBER_UNITED', result: 'W' },
-        { id: '3', type: 'match', label: 'Match 14', status: 'current', opponent: 'VOID_TITANS', difficulty: 'HARD' },
-        { id: '4', type: 'mercato', label: 'Mercato Draft', status: 'locked' },
-        { id: '5', type: 'match', label: 'Match 15', status: 'locked', opponent: 'ZENITH_FC', difficulty: 'NORMAL' },
-        { id: '6', type: 'boss', label: 'Division Final', status: 'locked', opponent: 'THE_GOLIATH', difficulty: 'CRITICAL' },
-    ],
-    activeSynergies: [
-        { id: 's1', icon: 'bolt', label: 'Lightning Strike', description: '+15% Pace on Counters' },
-        { id: 's2', icon: 'shield', label: 'Iron Wall', description: '+10% Def in Final 10m' },
-    ],
-    roster: [],
-    setTeamName: (teamName) => set({ teamName }),
-    setDivision: (division) => set({ division }),
-    setFormation: (formation) => set({ formation }),
-    setOverallRating: (overallRating) => set({ overallRating }),
-}));
+export const useSquadStore = create<SquadState>()(
+    persist(
+        (set) => ({
+            teamName: 'STRIKER_COMMAND',
+            teamLogo: '/assets/logo/logo-1.png',
+            division: 4,
+            formation: '4-4-2 DIAMOND',
+            overallRating: 0,
+            composites: {
+                shooting: 0,
+                passing: 0,
+                defense: 0,
+                physical: 0,
+            },
+            staminaAvg: 100,
+            morale: 50,
+            streak: ['W', 'D', 'W', 'W', 'L'],
+            routeNodes: [
+                { id: '1', type: 'match', label: 'Match 1', status: 'completed', opponent: 'Kobal FC', difficulty: 'EASY' },
+                { id: '2', type: 'match', label: 'Match 2', status: 'completed', opponent: 'Zenith City', difficulty: 'NORMAL' },
+                { id: '3', type: 'mercato', label: 'Draft', status: 'completed' },
+                { id: '4', type: 'match', label: 'Match 3', status: 'current', opponent: 'Titan United', difficulty: 'HARD' },
+                { id: '5', type: 'rest', label: 'Repos', status: 'locked' },
+                { id: '6', type: 'boss', label: 'Final', status: 'locked' },
+            ],
+            activeSynergies: [
+                { id: 's1', icon: 'bolt', label: 'Neon Counters', description: 'Fast breaks deal +15% pressure' },
+                { id: 's2', icon: 'shield', label: 'Iron Wall', description: '+10% Def in Final 10m' },
+            ],
+            roster: [],
+            setTeamName: (teamName) => set({ teamName }),
+            setDivision: (division) => set({ division }),
+            setFormation: (formation) => set({ formation }),
+            setOverallRating: (overallRating) => set({ overallRating }),
+            initializeRoster: (force = false) => set((state) => {
+                if (!force && state.roster.length > 0) return state;
+                
+                const roster = PlayerFactory.getInstance().generateInitialSquad(state.division);
+                
+                // Simplified average for field players only to satisfy type checking
+                const fieldPlayers = roster.filter(p => p.mainPosition !== 'GK');
+                
+                const avgField = (stat: keyof FieldPlayerStats) => {
+                    const total = fieldPlayers.reduce((acc: number, p: Player) => {
+                        const s = p.stats as FieldPlayerStats;
+                        return acc + (s[stat] || 0);
+                    }, 0);
+                    return fieldPlayers.length > 0 ? Math.floor(total / fieldPlayers.length) : 0;
+                };
+
+                const shootingAvg = avgField('shooting');
+                const passingAvg = avgField('passing');
+                const defenseAvg = avgField('tackling'); // Using tackling as proxy for defense
+                const physicalAvg = avgField('stamina'); // Using stamina as proxy for physical
+
+                return { 
+                    roster,
+                    overallRating: shootingAvg, // Temporary
+                    composites: {
+                        shooting: shootingAvg,
+                        passing: passingAvg,
+                        defense: defenseAvg,
+                        physical: physicalAvg,
+                    }
+                };
+            }),
+        }),
+        {
+            name: 'squad-storage',
+        }
+    )
+);
