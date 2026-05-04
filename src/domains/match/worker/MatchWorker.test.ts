@@ -34,6 +34,15 @@ describe('MatchWorker', () => {
     it('posts state update messages every 250ms', async () => {
         await import('./MatchWorker');
 
+        // Match simulation doesn't start automatically, we must send a command
+        window.dispatchEvent(new MessageEvent('message', {
+            data: {
+                type: 'start_match',
+                matchId: 'test-match',
+                seed: 123
+            }
+        }));
+
         vi.advanceTimersByTime(250);
         const stateUpdateCall = vi.mocked(postMessage).mock.calls.find(([message]) => {
             return typeof message === 'object' && message !== null && Reflect.get(message, 'type') === 'state_update';

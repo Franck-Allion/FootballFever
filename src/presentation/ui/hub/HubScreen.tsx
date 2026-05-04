@@ -5,7 +5,7 @@ import { GameState } from '@core/fsm/GameState';
 import { FlowService } from '@core/fsm/FlowService';
 import ProgressPanel from '../shared/ProgressPanel';
 import ActionTile from '../shared/ActionTile';
-import { FieldPlayerStats } from '@domains/shared/schemas/EntitySchemas';
+import { TeamRatingService } from '@domains/shared/services/TeamRatingService';
 
 const resultLabels: Record<string, string> = {
     W: 'V',
@@ -27,12 +27,14 @@ const HubScreen: React.FC = () => {
         division,
         formation,
         overallRating,
+        composites,
         staminaAvg,
         morale,
         streak,
         routeNodes,
         roster,
         initializeRoster,
+        computeOverallRating,
     } = useSquadStore();
     const { prestige } = useEconomyStore();
     const [language, setLanguage] = useState('fr');
@@ -53,11 +55,12 @@ const HubScreen: React.FC = () => {
         FlowService.getInstance().navigateTo(GameState.MATCH_SIM);
     };
 
-    // Logic to pick "best" players for display (simplified until 13.2)
-    const sortedRoster = [...roster].sort((a, b) => b.overallRating - a.overallRating);
-
-    const startingEleven = sortedRoster.slice(0, 11);
-    const substitutes = sortedRoster.slice(11, 17);
+    const startingEleven = TeamRatingService.selectStartingEleven(roster, formation);
+    const startingIds = new Set(startingEleven.map(({ player }) => player.id));
+    const substitutes = roster
+        .filter((player) => !startingIds.has(player.id))
+        .sort((a, b) => b.overallRating - a.overallRating)
+        .slice(0, 6);
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#e3e2e2] pb-10 font-['Space_Grotesk'] selection:bg-[#39ff14]/30 overflow-x-hidden">
@@ -151,15 +154,31 @@ const HubScreen: React.FC = () => {
                                 </div>
                                 <span className="material-symbols-outlined rounded bg-black/50 p-3 text-3xl text-[#39ff14] shadow-[0_0_14px_rgba(57,255,20,0.25)]" aria-hidden="true">groups</span>
                             </div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="border border-white/10 bg-black/25 px-2 py-1.5">
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Att</p>
+                                    <p className="text-sm font-black text-white">{composites.attack}</p>
+                                </div>
+                                <div className="border border-white/10 bg-black/25 px-2 py-1.5">
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Mil</p>
+                                    <p className="text-sm font-black text-white">{composites.midfield}</p>
+                                </div>
+                                <div className="border border-white/10 bg-black/25 px-2 py-1.5">
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Def</p>
+                                    <p className="text-sm font-black text-white">{composites.defense}</p>
+                                </div>
+                            </div>
                             <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-2">
-                                {startingEleven.map((player) => (
+                                {startingEleven.map(({ player, assignedPosition, rating }) => (
                                     <div key={player.id} className="flex items-center gap-2 min-w-0">
                                         <div className="h-6 w-6 shrink-0 rounded-full bg-black/40 border border-white/10 overflow-hidden">
                                             <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
                                         </div>
+                                        <span className="shrink-0 text-[9px] font-black uppercase text-white/35">{assignedPosition}</span>
                                         <span className={`truncate text-[11px] font-bold uppercase tracking-wide ${rarityColors[player.rarity]}`}>
                                             {player.name}
                                         </span>
+                                        <span className="ml-auto shrink-0 text-[10px] font-black text-white/45">{rating}</span>
                                     </div>
                                 ))}
                             </div>

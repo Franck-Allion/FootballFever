@@ -8,22 +8,42 @@ type DeepPartial<T> = {
             : T[Key];
 };
 
-const basePlayer: Player = {
+const basePlayer = {
     id: 'player-0',
     name: 'Academy Striker',
     rarity: 'Common',
-    position: 'ST',
+    mainPosition: 'ST',
+    secondaryPositions: [],
     stats: {
-        pace: 70,
-        shooting: 68,
-        passing: 61,
-        dribbling: 66,
-        defense: 40,
-        physical: 64
+        tackling: 30,
+        marking: 30,
+        positioning: 70,
+        passing: 60,
+        vision: 50,
+        clearance: 30,
+        technique: 65,
+        dribbling: 65,
+        pace: 75,
+        acceleration: 75,
+        stamina: 70,
+        power: 65,
+        duels: 50,
+        heading: 60,
+        shooting: 70,
+        finishing: 75,
+        composure: 65
     },
+    overallRating: 65,
+    morale: 50,
+    condition: 100,
     level: 1,
     xp: 0,
-    age: 18
+    xpGainMultiplier: 1.0,
+    potential: 80,
+    age: 18,
+    preferredSystem: '4-4-2',
+    prestigeValue: 1000,
+    portraitUrl: '/assets/portraits/default.png'
 };
 
 export class EntityFactory {
@@ -31,14 +51,18 @@ export class EntityFactory {
 
     public static createPlayer(overrides: DeepPartial<Player> = {}): Player {
         const playerId = overrides.id ?? `player-${EntityFactory.playerCounter}`;
-        const mergedPlayer: Player = {
+        
+        // Deep merge stats specifically to avoid losing base stats
+        const mergedStats = {
+            ...basePlayer.stats,
+            ...(overrides.stats || {})
+        };
+
+        const mergedPlayer = {
             ...basePlayer,
             ...overrides,
             id: playerId,
-            stats: {
-                ...basePlayer.stats,
-                ...overrides.stats
-            }
+            stats: mergedStats
         };
 
         EntityFactory.playerCounter += 1;

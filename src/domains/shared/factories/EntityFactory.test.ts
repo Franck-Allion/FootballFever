@@ -11,6 +11,6 @@ describe('EntityFactory', () => {
         expect(player.stats.pace).toBeGreaterThanOrEqual(0);
         expect(player.stats.pace).toBeLessThanOrEqual(100);
         expect(player.rarity).toBe('Common');
-        expect(player.position).toBe('ST');
+        expect(player.mainPosition).toBe('ST');
     });
 });

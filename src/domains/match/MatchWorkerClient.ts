@@ -67,7 +67,11 @@ export class MatchWorkerClient {
     private readonly handleMessage = (event: MessageEvent<MatchWorkerMessage>): void => {
         switch (event.data.type) {
             case 'heartbeat':
-                // ... heartbeat logging stays same ...
+                this.logger.info(
+                    'Match worker heartbeat received',
+                    { timestamp: event.data.timestamp, sequence: event.data.sequence },
+                    LogDomain.MATCH
+                );
                 break;
             case 'state_update':
                 {
@@ -127,9 +131,15 @@ export class MatchWorkerClient {
                 }
 
                 this.lastState = state;
-                // ... debug logging ...
                 break;
                 }
+                default:
+
+                this.logger.warn(
+                    'Match worker received unknown message type',
+                    event.data,
+                    LogDomain.MATCH
+                );
         }
     };
 

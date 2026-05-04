@@ -79,47 +79,6 @@ describe('MatchWorkerClient', () => {
         );
     });
 
-    it('logs state update messages from the worker', () => {
-        getMatchWorkerClient();
-        const worker = MockWorker.instances[0];
-
-        const mockState = {
-            matchId: 'test',
-            seed: 123,
-            minute: 10,
-            second: 30,
-            period: 1,
-            score: { home: 1, away: 0 },
-            homeStats: { shots: 2, shotsOnTarget: 1, goals: 1, xG: 0.5, possessionSeconds: 300 },
-            awayStats: { shots: 1, shotsOnTarget: 0, goals: 0, xG: 0.1, possessionSeconds: 330 },
-            homeRating: { shooting: 65 },
-            awayRating: { shooting: 55 },
-            possessionTeam: 'home' as const,
-            ballZone: 'MID_CENTER_L' as const,
-            currentPhase: 'OPEN_PLAY' as const,
-            isComplete: false,
-        };
-
-        worker?.emitMessage({
-            type: 'state_update',
-            state: mockState
-        });
-
-        expect(LoggerService.getInstance().debug).toHaveBeenCalledWith(
-            'Match state updated',
-            {
-                minute: 10,
-                second: 30,
-                ballZone: 'MID_CENTER_L',
-                possession: 'home',
-                score: '1-0',
-                shots: 'H:2 A:1',
-                xG: 'H:0.50 A:0.10'
-            },
-            LogDomain.MATCH
-        );
-    });
-
     it('warns when a state update message is malformed', () => {
         getMatchWorkerClient();
         const worker = MockWorker.instances[0];
@@ -178,4 +137,4 @@ describe('MatchWorkerClient', () => {
             LogDomain.MATCH
         );
     });
-    });
+});

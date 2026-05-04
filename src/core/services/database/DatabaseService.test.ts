@@ -5,9 +5,9 @@ globalThis.IDBKeyRange = IDBKeyRange;
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DatabaseService } from './DatabaseService';
-// eslint-disable-next-line no-restricted-imports -- Story 2.1 requires validation against shared domain schemas.
+// eslint-disable-next-line no-restricted-imports -- Story 2.1 requires validation against shared domain schemas.        
 import { EntityFactory } from '@domains/shared/factories/EntityFactory';
-// eslint-disable-next-line no-restricted-imports -- Story 2.1 requires validation against shared domain schemas.
+// eslint-disable-next-line no-restricted-imports -- Story 2.1 requires validation against shared domain schemas.        
 import type { GameStateData, Player, Team } from '@domains/shared/schemas/EntitySchemas';
 
 describe('DatabaseService', () => {
@@ -34,18 +34,16 @@ describe('DatabaseService', () => {
             id: 'invalid',
             name: '',
             rarity: 'Common',
-            position: 'ST',
+            mainPosition: 'ST',
             stats: {
                 pace: 101,
-                shooting: 50,
-                passing: 50,
-                dribbling: 50,
-                defense: 50,
-                physical: 50
+                shooting: 50
             },
             level: 1,
             xp: 0,
-            age: 18
+            age: 18,
+            potential: 80,
+            prestigeValue: 1000
         };
 
         await expect(service.savePlayer(invalidPlayer as unknown as Player)).rejects.toThrow();

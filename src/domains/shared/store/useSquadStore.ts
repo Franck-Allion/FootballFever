@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Player, FieldPlayerStats } from '../schemas/EntitySchemas';
+import { Player } from '../schemas/EntitySchemas';
 import { PlayerFactory } from '../services/PlayerFactory';
+import { TeamRatingService } from '../services/TeamRatingService';
 
 export interface TimelineNode {
     id: string;
@@ -28,6 +29,8 @@ interface SquadState {
     formation: string;
     overallRating: number;
     composites: {
+        attack: number;
+        midfield: number;
         shooting: number;
         passing: number;
         defense: number;
@@ -45,6 +48,7 @@ interface SquadState {
     setDivision: (division: number) => void;
     setFormation: (formation: string) => void;
     setOverallRating: (rating: number) => void;
+    computeOverallRating: () => void;
     initializeRoster: (force?: boolean) => void;
 }
 
@@ -57,6 +61,8 @@ export const useSquadStore = create<SquadState>()(
             formation: '4-4-2 DIAMOND',
             overallRating: 0,
             composites: {
+                attack: 0,
+                midfield: 0,
                 shooting: 0,
                 passing: 0,
                 defense: 0,
@@ -80,38 +86,40 @@ export const useSquadStore = create<SquadState>()(
             roster: [],
             setTeamName: (teamName) => set({ teamName }),
             setDivision: (division) => set({ division }),
-            setFormation: (formation) => set({ formation }),
+            setFormation: (formation) => set((state) => {
+                const rating = TeamRatingService.calculateTeamRating(state.roster, formation);
+
+                return {
+                    formation,
+                    overallRating: rating.overallRating,
+                    composites: rating.composites,
+                    staminaAvg: rating.staminaAvg,
+                    morale: rating.morale,
+                };
+            }),
             setOverallRating: (overallRating) => set({ overallRating }),
+            computeOverallRating: () => set((state) => {
+                const rating = TeamRatingService.calculateTeamRating(state.roster, state.formation);
+
+                return {
+                    overallRating: rating.overallRating,
+                    composites: rating.composites,
+                    staminaAvg: rating.staminaAvg,
+                    morale: rating.morale,
+                };
+            }),
             initializeRoster: (force = false) => set((state) => {
                 if (!force && state.roster.length > 0) return state;
                 
                 const roster = PlayerFactory.getInstance().generateInitialSquad(state.division);
-                
-                // Simplified average for field players only to satisfy type checking
-                const fieldPlayers = roster.filter(p => p.mainPosition !== 'GK');
-                
-                const avgField = (stat: keyof FieldPlayerStats) => {
-                    const total = fieldPlayers.reduce((acc: number, p: Player) => {
-                        const s = p.stats as FieldPlayerStats;
-                        return acc + (s[stat] || 0);
-                    }, 0);
-                    return fieldPlayers.length > 0 ? Math.floor(total / fieldPlayers.length) : 0;
-                };
-
-                const shootingAvg = avgField('shooting');
-                const passingAvg = avgField('passing');
-                const defenseAvg = avgField('tackling'); // Using tackling as proxy for defense
-                const physicalAvg = avgField('stamina'); // Using stamina as proxy for physical
+                const rating = TeamRatingService.calculateTeamRating(roster, state.formation);
 
                 return { 
                     roster,
-                    overallRating: shootingAvg, // Temporary
-                    composites: {
-                        shooting: shootingAvg,
-                        passing: passingAvg,
-                        defense: defenseAvg,
-                        physical: physicalAvg,
-                    }
+                    overallRating: rating.overallRating,
+                    composites: rating.composites,
+                    staminaAvg: rating.staminaAvg,
+                    morale: rating.morale,
                 };
             }),
         }),

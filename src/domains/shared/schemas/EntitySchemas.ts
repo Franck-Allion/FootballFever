@@ -51,22 +51,22 @@ export const PlayerSchema = z.object({
     rarity: PlayerRarity,
     mainPosition: PlayerPosition,
     secondaryPositions: z.array(PlayerPosition).default([]),
-    
+
     // Core Dynamic Stats
     stats: z.union([FieldPlayerStatsSchema, GoalkeeperStatsSchema]),
-    
+
     // RPG & Status Stats
     overallRating: z.number().min(0).max(100),
     morale: z.number().min(0).max(100).default(50),
     condition: z.number().min(0).max(100).default(100), // "Physique" in user request
     stamina: z.number().min(0).max(100).default(100),   // "Endurance" (current)
-    
+
     // Progression
     level: z.number().int().min(1).default(1),
     xp: z.number().int().min(0).default(0),
     xpGainMultiplier: z.number().min(1.0).default(1.0),
     potential: z.number().min(0).max(100),
-    
+
     // Identity
     age: z.number().int().min(15).max(45),
     preferredSystem: z.string().default('4-4-2'),
@@ -77,7 +77,7 @@ export const PlayerSchema = z.object({
 export const TeamSchema = z.object({
     id: z.string().min(1),
     name: z.string().min(1),
-    roster: z.array(PlayerSchema).min(1),
+    roster: z.array(z.string()).min(1),
     formation: z.string().min(1)
 }).passthrough();
 
