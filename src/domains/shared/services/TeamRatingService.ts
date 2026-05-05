@@ -203,8 +203,7 @@ export class TeamRatingService {
         };
     }
 
-    public static calculateTeamRating(roster: Player[], formation = '4-4-2 DIAMOND'): TeamRatingResult {
-        const startingEleven = TeamRatingService.selectStartingEleven(roster, formation);
+    public static calculateTeamRatingForLineup(startingEleven: RatedLineupPlayer[]): TeamRatingResult {
         const averages = TeamRatingService.calculateTeamAverages(startingEleven);
         const byGroup = (predicate: (position: RatingPosition) => boolean): number[] => startingEleven
             .filter(({ assignedPosition }) => predicate(assignedPosition))
@@ -227,5 +226,11 @@ export class TeamRatingService {
             ...averages,
             startingEleven,
         };
+    }
+
+    public static calculateTeamRating(roster: Player[], formation = '4-4-2 DIAMOND'): TeamRatingResult {
+        return TeamRatingService.calculateTeamRatingForLineup(
+            TeamRatingService.selectStartingEleven(roster, formation)
+        );
     }
 }

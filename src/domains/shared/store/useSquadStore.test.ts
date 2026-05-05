@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { EntityFactory } from '../factories/EntityFactory';
 import { PlayerSchema, type GoalkeeperStats, type Player } from '../schemas/EntitySchemas';
+import { LineupService } from '../services/LineupService';
 import { useSquadStore } from './useSquadStore';
 
 const createPlayer = (id: string, position: Player['mainPosition'], base: number): Player => EntityFactory.createPlayer({
@@ -83,6 +84,9 @@ describe('useSquadStore team rating integration', () => {
             staminaAvg: 100,
             morale: 50,
             roster: [],
+            lineupSlots: LineupService.createEmptyLineup('4-4-2 DIAMOND'),
+            benchSlots: LineupService.createEmptyBench(),
+            gameInstruction: 'balanced',
         });
     });
 
@@ -114,5 +118,66 @@ describe('useSquadStore team rating integration', () => {
         expect(state.composites.midfield).toBeGreaterThan(0);
         expect(state.staminaAvg).toBeGreaterThan(0);
         expect(state.morale).toBeGreaterThan(0);
+    });
+
+    it('persists explicit lineup assignments and recomputes rating after a valid move', () => {
+        // Arrange
+        const roster = [
+            createGoalkeeper('gk', 65),
+            createPlayer('weak-st', 'ST', 45),
+            createPlayer('strong-st', 'ST', 90),
+        ];
+        useSquadStore.setState({
+            roster,
+            lineupSlots: {
+                ...LineupService.createEmptyLineup('4-4-2 DIAMOND'),
+                gk: 'gk',
+                'st-l': 'weak-st',
+            },
+            benchSlots: {
+                ...LineupService.createEmptyBench(),
+                'bench-1': 'strong-st',
+            },
+        });
+        useSquadStore.getState().computeOverallRating();
+        const ratingBefore = useSquadStore.getState().overallRating;
+
+        // Act
+        const moved = useSquadStore.getState().movePlayerToSlot('strong-st', { area: 'pitch', slotId: 'st-l' });
+        const state = useSquadStore.getState();
+
+        // Assert
+        expect(moved).toBe(true);
+        expect(state.lineupSlots['st-l']).toBe('strong-st');
+        expect(state.benchSlots['bench-1']).toBe('weak-st');
+        expect(state.overallRating).toBeGreaterThan(ratingBefore);
+    });
+
+    it('preserves manual starters when changing formation instead of resetting to auto-selection', () => {
+        // Arrange
+        const roster = [
+            createGoalkeeper('gk', 65),
+            createPlayer('manual-st', 'ST', 45),
+            createPlayer('auto-st', 'ST', 90),
+        ];
+        useSquadStore.setState({
+            formation: '4-4-2 DIAMOND',
+            roster,
+            lineupSlots: {
+                ...LineupService.createEmptyLineup('4-4-2 DIAMOND'),
+                gk: 'gk',
+                'st-l': 'manual-st',
+            },
+            benchSlots: LineupService.createEmptyBench(),
+        });
+
+        // Act
+        useSquadStore.getState().setFormation('4-3-3');
+        const state = useSquadStore.getState();
+
+        // Assert
+        expect(state.formation).toBe('4-3-3');
+        expect(Object.values(state.lineupSlots)).toContain('manual-st');
+        expect(Object.values(state.lineupSlots)).not.toContain('auto-st');
     });
 });

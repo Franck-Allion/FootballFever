@@ -11,6 +11,7 @@ import { useTranslation } from './hooks/useTranslation';
 import { useMatchWorker } from '@domains/match/hooks/useMatchWorker';
 import HubScreen from './ui/hub/HubScreen';
 import MatchSimulationScreen from './ui/match/MatchSimulationScreen';
+import TacticsScreen from './ui/tactics/TacticsScreen';
 
 function App()
 {
@@ -81,6 +82,8 @@ function App()
             )}
 
             {currentState === GameState.HUB && <HubScreen />}
+
+            {currentState === GameState.TACTICS && <TacticsScreen />}
 
             {currentState === GameState.MATCH_SIM && (
                 <div className="flex flex-col items-center justify-center min-h-screen p-4">

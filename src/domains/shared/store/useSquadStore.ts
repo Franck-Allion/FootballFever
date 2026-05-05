@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Player } from '../schemas/EntitySchemas';
+import { type AssignmentDestination, type AssignmentMap, LineupService } from '../services/LineupService';
 import { PlayerFactory } from '../services/PlayerFactory';
-import { TeamRatingService } from '../services/TeamRatingService';
+import { type TacticalInstructionId } from '../services/TacticalInstructionService';
 
 export interface TimelineNode {
     id: string;
@@ -42,15 +43,38 @@ interface SquadState {
     routeNodes: TimelineNode[];
     activeSynergies: ActiveSynergy[];
     roster: Player[];
+    lineupSlots: AssignmentMap;
+    benchSlots: AssignmentMap;
+    gameInstruction: TacticalInstructionId;
     
     // Actions
     setTeamName: (name: string) => void;
     setDivision: (division: number) => void;
     setFormation: (formation: string) => void;
+    setGameInstruction: (instruction: TacticalInstructionId) => void;
+    movePlayerToSlot: (playerId: string, destination: AssignmentDestination) => boolean;
+    initializeLineup: (force?: boolean) => void;
     setOverallRating: (rating: number) => void;
     computeOverallRating: () => void;
     initializeRoster: (force?: boolean) => void;
 }
+
+const DEFAULT_FORMATION = '4-4-2 DIAMOND';
+
+const applyRating = (
+    roster: Player[],
+    formation: string,
+    lineupSlots: AssignmentMap
+): Pick<SquadState, 'overallRating' | 'composites' | 'staminaAvg' | 'morale'> => {
+    const rating = LineupService.calculateAssignedTeamRating(roster, formation, lineupSlots);
+
+    return {
+        overallRating: rating.overallRating,
+        composites: rating.composites,
+        staminaAvg: rating.staminaAvg,
+        morale: rating.morale,
+    };
+};
 
 export const useSquadStore = create<SquadState>()(
     persist(
@@ -58,7 +82,7 @@ export const useSquadStore = create<SquadState>()(
             teamName: 'STRIKER_COMMAND',
             teamLogo: '/assets/logo/logo-1.png',
             division: 4,
-            formation: '4-4-2 DIAMOND',
+            formation: DEFAULT_FORMATION,
             overallRating: 0,
             composites: {
                 attack: 0,
@@ -84,47 +108,104 @@ export const useSquadStore = create<SquadState>()(
                 { id: 's2', icon: 'shield', label: 'Iron Wall', description: '+10% Def in Final 10m' },
             ],
             roster: [],
+            lineupSlots: LineupService.createEmptyLineup(DEFAULT_FORMATION),
+            benchSlots: LineupService.createEmptyBench(),
+            gameInstruction: 'balanced',
             setTeamName: (teamName) => set({ teamName }),
             setDivision: (division) => set({ division }),
             setFormation: (formation) => set((state) => {
-                const rating = TeamRatingService.calculateTeamRating(state.roster, formation);
+                const assignments = LineupService.remapAssignmentsForFormation({
+                    roster: state.roster,
+                    fromFormation: state.formation,
+                    toFormation: formation,
+                    lineupSlots: state.lineupSlots,
+                    benchSlots: state.benchSlots,
+                });
 
                 return {
                     formation,
-                    overallRating: rating.overallRating,
-                    composites: rating.composites,
-                    staminaAvg: rating.staminaAvg,
-                    morale: rating.morale,
+                    ...assignments,
+                    ...applyRating(state.roster, formation, assignments.lineupSlots),
+                };
+            }),
+            setGameInstruction: (gameInstruction) => set((state) => ({
+                gameInstruction,
+                ...applyRating(state.roster, state.formation, state.lineupSlots),
+            })),
+            movePlayerToSlot: (playerId, destination) => {
+                let moved = false;
+
+                set((state) => {
+                    const result = LineupService.movePlayer({
+                        roster: state.roster,
+                        formation: state.formation,
+                        lineupSlots: state.lineupSlots,
+                        benchSlots: state.benchSlots,
+                        playerId,
+                        destination,
+                    });
+
+                    moved = result.moved;
+                    if (!result.moved) return state;
+
+                    return {
+                        lineupSlots: result.lineupSlots,
+                        benchSlots: result.benchSlots,
+                        ...applyRating(state.roster, state.formation, result.lineupSlots),
+                    };
+                });
+
+                return moved;
+            },
+            initializeLineup: (force = false) => set((state) => {
+                const hasAssignments = Object.values(state.lineupSlots).some(Boolean) || Object.values(state.benchSlots).some(Boolean);
+                if (!force && hasAssignments) return state;
+
+                const assignments = LineupService.createInitialAssignments(state.roster, state.formation);
+
+                return {
+                    ...assignments,
+                    ...applyRating(state.roster, state.formation, assignments.lineupSlots),
                 };
             }),
             setOverallRating: (overallRating) => set({ overallRating }),
             computeOverallRating: () => set((state) => {
-                const rating = TeamRatingService.calculateTeamRating(state.roster, state.formation);
-
                 return {
-                    overallRating: rating.overallRating,
-                    composites: rating.composites,
-                    staminaAvg: rating.staminaAvg,
-                    morale: rating.morale,
+                    ...applyRating(state.roster, state.formation, state.lineupSlots),
                 };
             }),
             initializeRoster: (force = false) => set((state) => {
                 if (!force && state.roster.length > 0) return state;
                 
                 const roster = PlayerFactory.getInstance().generateInitialSquad(state.division);
-                const rating = TeamRatingService.calculateTeamRating(roster, state.formation);
+                const assignments = LineupService.createInitialAssignments(roster, state.formation);
 
                 return { 
                     roster,
-                    overallRating: rating.overallRating,
-                    composites: rating.composites,
-                    staminaAvg: rating.staminaAvg,
-                    morale: rating.morale,
+                    ...assignments,
+                    ...applyRating(roster, state.formation, assignments.lineupSlots),
                 };
             }),
         }),
         {
             name: 'squad-storage',
+            version: 2,
+            merge: (persisted, current) => {
+                const saved = persisted as Partial<SquadState> | null;
+                if (!saved) return current;
+
+                return {
+                    ...current,
+                    ...saved,
+                    composites: {
+                        ...current.composites,
+                        ...saved.composites,
+                    },
+                    lineupSlots: saved.lineupSlots ?? current.lineupSlots,
+                    benchSlots: saved.benchSlots ?? current.benchSlots,
+                    gameInstruction: saved.gameInstruction ?? current.gameInstruction,
+                };
+            },
         }
     )
 );

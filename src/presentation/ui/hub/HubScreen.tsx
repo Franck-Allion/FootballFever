@@ -6,6 +6,8 @@ import { FlowService } from '@core/fsm/FlowService';
 import ProgressPanel from '../shared/ProgressPanel';
 import ActionTile from '../shared/ActionTile';
 import { TeamRatingService } from '@domains/shared/services/TeamRatingService';
+import { TacticalInstructionService } from '@domains/shared/services/TacticalInstructionService';
+import { LineupService } from '@domains/shared/services/LineupService';
 
 const resultLabels: Record<string, string> = {
     W: 'V',
@@ -26,6 +28,7 @@ const HubScreen: React.FC = () => {
         teamLogo,
         division,
         formation,
+        gameInstruction,
         overallRating,
         composites,
         staminaAvg,
@@ -33,6 +36,8 @@ const HubScreen: React.FC = () => {
         streak,
         routeNodes,
         roster,
+        lineupSlots,
+        benchSlots,
         initializeRoster,
         computeOverallRating,
     } = useSquadStore();
@@ -55,12 +60,24 @@ const HubScreen: React.FC = () => {
         FlowService.getInstance().navigateTo(GameState.MATCH_SIM);
     };
 
-    const startingEleven = TeamRatingService.selectStartingEleven(roster, formation);
+    const handleOpenTactics = () => {
+        FlowService.getInstance().navigateTo(GameState.TACTICS);
+    };
+
+    const assignedEleven = LineupService.getAssignedStarters(roster, formation, lineupSlots);
+    const startingEleven = assignedEleven.length > 0 ? assignedEleven : TeamRatingService.selectStartingEleven(roster, formation);
+    const activeInstruction = TacticalInstructionService.getInstruction(gameInstruction);
     const startingIds = new Set(startingEleven.map(({ player }) => player.id));
-    const substitutes = roster
-        .filter((player) => !startingIds.has(player.id))
-        .sort((a, b) => b.overallRating - a.overallRating)
-        .slice(0, 6);
+    const assignedSubstitutes = Object.values(benchSlots)
+        .filter((playerId): playerId is string => Boolean(playerId))
+        .map((playerId) => roster.find((player) => player.id === playerId))
+        .filter((player): player is typeof roster[number] => Boolean(player));
+    const substitutes = assignedSubstitutes.length > 0
+        ? assignedSubstitutes
+        : roster
+            .filter((player) => !startingIds.has(player.id))
+            .sort((a, b) => b.overallRating - a.overallRating)
+            .slice(0, 5);
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#e3e2e2] pb-10 font-['Space_Grotesk'] selection:bg-[#39ff14]/30 overflow-x-hidden">
@@ -121,7 +138,8 @@ const HubScreen: React.FC = () => {
 
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <button 
-                        aria-label={`Tactique actuelle: ${formation}. Consigne: Pressing haut. Cliquez pour modifier.`}
+                        onClick={handleOpenTactics}
+                        aria-label={`Tactique actuelle: ${formation}. Consigne: ${activeInstruction.label}. Cliquez pour modifier.`}
                         className="group min-h-48 rounded-xl border border-white/10 bg-white/[0.03] p-5 text-left backdrop-blur-2xl transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 active:scale-[0.99]"
                     >
                         <div className="flex h-full flex-col justify-between gap-5">
@@ -135,7 +153,7 @@ const HubScreen: React.FC = () => {
                             <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Consigne</p>
-                                    <p className="mt-1 text-lg font-black uppercase text-[#39ff14]">Pressing haut</p>
+                                    <p className="mt-1 text-lg font-black uppercase text-[#39ff14]">{activeInstruction.label}</p>
                                 </div>
                                 <span className="material-symbols-outlined text-white/30 transition-transform group-hover:translate-x-1" aria-hidden="true">chevron_right</span>
                             </div>

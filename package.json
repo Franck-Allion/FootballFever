@@ -20,6 +20,7 @@
     "test:ci": "vitest run --coverage"
   },
   "dependencies": {
+    "@dnd-kit/react": "^0.4.0",
     "@tauri-apps/api": "^2.11.0",
     "@types/react-window": "^1.8.8",
     "class-variance-authority": "^0.7.0",
