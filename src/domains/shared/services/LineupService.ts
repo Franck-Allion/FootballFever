@@ -2,7 +2,7 @@ import { type Player } from '../schemas/EntitySchemas';
 import { type RatedLineupPlayer, type RatingPosition, TeamRatingService } from './TeamRatingService';
 
 export type AssignmentMap = Record<string, string | null>;
-export type AssignmentArea = 'pitch' | 'bench';
+export type AssignmentArea = 'pitch' | 'bench' | 'unassign';
 export type Eligibility = 'best' | 'adapted' | 'invalid';
 export type SlotRole = 'GK' | 'DEF' | 'MID' | 'ATT';
 
@@ -255,12 +255,25 @@ export class LineupService {
             return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
         }
 
+        const source = LineupService.findPlayerLocation(input.lineupSlots, input.benchSlots, input.playerId);
+        
+        // Handle unassignment (moving back to squad pool)
+        if (input.destination.area === 'unassign') {
+            if (!source) return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
+            
+            const lineupSlots = { ...input.lineupSlots };
+            const benchSlots = { ...input.benchSlots };
+            const mutableSource = source.area === 'pitch' ? lineupSlots : benchSlots;
+            mutableSource[source.slotId] = null;
+            
+            return { moved: true, lineupSlots, benchSlots };
+        }
+
         const destinationSlot = LineupService.getDestinationSlot(input.formation, input.destination);
         if (!destinationSlot || LineupService.getPositionEligibility(player, destinationSlot) === 'invalid') {
             return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
         }
 
-        const source = LineupService.findPlayerLocation(input.lineupSlots, input.benchSlots, input.playerId);
         const destinationMap = input.destination.area === 'pitch' ? input.lineupSlots : input.benchSlots;
         const occupyingPlayerId = destinationMap[input.destination.slotId] ?? null;
 

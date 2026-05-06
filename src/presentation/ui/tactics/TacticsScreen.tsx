@@ -1,4 +1,9 @@
-import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react';
+import {
+    DragDropProvider,
+    DragOverlay,
+    useDraggable,
+    useDroppable,
+} from '@dnd-kit/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { GameState } from '@core/fsm/GameState';
@@ -18,17 +23,24 @@ type PlayerGroup = 'goalkeepers' | 'defenders' | 'midfielders' | 'attackers';
 type DetailTab = 'resume' | 'stats' | 'forme';
 
 const rarityTextClasses: Record<string, string> = {
-    Common: 'text-gray-200',
-    Rare: 'text-blue-300 drop-shadow-[0_0_6px_rgba(96,165,250,0.45)]',
-    Epic: 'text-purple-300 drop-shadow-[0_0_6px_rgba(192,132,252,0.45)]',
-    Legendary: 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.48)]',
+    Common: 'text-zinc-400',
+    Rare: 'text-blue-300 drop-shadow-[0_0_8px_rgba(147,197,253,0.5)]',
+    Epic: 'text-purple-300 drop-shadow-[0_0_8px_rgba(216,180,254,0.5)]',
+    Legendary: 'text-amber-200 drop-shadow-[0_0_10px_rgba(252,211,77,0.6)]',
 };
 
 const rarityBorderClasses: Record<string, string> = {
-    Common: 'border-white/10',
-    Rare: 'border-blue-400/45 shadow-[0_0_12px_rgba(96,165,250,0.18)]',
-    Epic: 'border-purple-400/45 shadow-[0_0_12px_rgba(192,132,252,0.18)]',
-    Legendary: 'border-amber-400/50 shadow-[0_0_14px_rgba(251,191,36,0.22)]',
+    Common: 'border-white/10 shadow-inner',
+    Rare: 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2),inset_0_0_10px_rgba(59,130,246,0.1)]',
+    Epic: 'border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.2),inset_0_0_10px_rgba(168,85,247,0.1)]',
+    Legendary: 'border-amber-400/60 shadow-[0_0_20px_rgba(234,179,8,0.25),inset_0_0_12px_rgba(234,179,8,0.15)]',
+};
+
+const rarityBgClasses: Record<string, string> = {
+    Common: 'bg-gradient-to-br from-zinc-900 to-zinc-950',
+    Rare: 'bg-gradient-to-br from-blue-950 to-zinc-950',
+    Epic: 'bg-gradient-to-br from-purple-950 to-zinc-950',
+    Legendary: 'bg-gradient-to-br from-amber-900/40 to-yellow-600/20 backdrop-blur-md',
 };
 
 const eligibilityClasses: Record<Eligibility, string> = {
@@ -59,13 +71,12 @@ const statItems = [
     ['Mor', 'morale'],
 ] as const;
 
-const splitName = (name: string): { firstName: string; lastName: string } => {
-    const [firstName = name, ...rest] = name.trim().split(/\s+/);
-
-    return {
-        firstName,
-        lastName: rest.join(' '),
-    };
+const getDisplayName = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length > 1) {
+        return parts[parts.length - 1];
+    }
+    return name;
 };
 
 const getPlayerGroup = (player: Player): PlayerGroup => {
@@ -125,50 +136,154 @@ interface DraggablePlayerProps {
     onSelect: (playerId: string) => void;
 }
 
+interface PlayerChipProps {
+    player: Player;
+    compact?: boolean;
+    selected?: boolean;
+    isDragging?: boolean;
+    placementStatus?: Eligibility;
+    onSelect?: (playerId: string) => void;
+}
+
+const PlayerChip: React.FC<PlayerChipProps> = ({ 
+    player, 
+    compact, 
+    selected, 
+    isDragging, 
+    placementStatus, 
+    onSelect
+}) => {
+    const displayName = useMemo(() => getDisplayName(player.name), [player.name]);
+    
+    return (
+        <div
+            className={`group relative flex min-w-0 touch-none select-none overflow-hidden transition-all duration-300 ${
+                compact
+                    ? 'h-[clamp(52px,9vw,64px)] w-[clamp(74px,12vw,92px)] flex-col rounded-md border-b-2'
+                    : 'h-12 w-full items-center gap-2 rounded-lg border px-2'
+            } ${rarityBgClasses[player.rarity] ?? rarityBgClasses.Common} ${
+                rarityBorderClasses[player.rarity] ?? rarityBorderClasses.Common
+            } ${
+                selected ? 'ring-2 ring-[#39ff14] z-20 shadow-[0_0_20px_rgba(57,255,20,0.3)]' : ''
+            } ${isDragging ? 'opacity-40 scale-95' : 'hover:brightness-110 active:scale-95'}`}
+        >
+            {/* Glossy Overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-50" />
+            <div className="pointer-events-none absolute -left-1/2 top-0 h-full w-1/4 skew-x-[35deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-all duration-1000 group-hover:left-[150%]" />
+
+            {compact ? (
+                // PITCH/BENCH COMPACT DESIGN
+                <div className="flex flex-col h-full w-full">
+                    {/* Header: Rating & Position */}
+                    <div className="flex justify-between items-center px-1.5 py-0.5 bg-black/40 backdrop-blur-sm border-b border-white/5">
+                        <span className="text-[10px] sm:text-[11px] font-black leading-none text-white tracking-tighter">
+                            {player.overallRating}
+                        </span>
+                        <span className="text-[8px] font-black leading-none text-white/50 uppercase">
+                            {player.mainPosition}
+                        </span>
+                    </div>
+
+                    {/* Body: Portrait (Larger, centered) */}
+                    <div className="relative flex-1 flex justify-center items-end overflow-hidden pt-1">
+                        <img 
+                            src={player.portraitUrl || '/assets/portraits/default.png'} 
+                            alt="" 
+                            className="h-[110%] w-auto object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)] group-hover:scale-110 transition-transform duration-500" 
+                        />
+                    </div>
+
+                    {/* Footer: Name (Maximum readability) */}
+                    <div className="bg-black/60 px-1 py-1 backdrop-blur-md">
+                        <span className="block truncate text-center font-black uppercase text-[9px] sm:text-[10px] leading-none tracking-tight text-white drop-shadow-md">
+                            {displayName}
+                        </span>
+                    </div>
+                </div>
+            ) : (
+                // LIST FULL DESIGN
+                <>
+                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded bg-black/40 border border-white/10">
+                        <img 
+                            src={player.portraitUrl || '/assets/portraits/default.png'} 
+                            alt="" 
+                            className="h-full w-full object-cover" 
+                        />
+                        <div className="absolute bottom-0 right-0 bg-black/80 px-1 text-[8px] font-black leading-tight text-white">
+                            {player.overallRating}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={`truncate font-black uppercase text-[11px] sm:text-[13px] leading-tight tracking-tight ${rarityTextClasses[player.rarity]}`}>
+                                {player.name}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none">
+                                {player.mainPosition}
+                            </span>
+                            <span className={`text-[8px] font-black px-1 rounded-sm bg-white/5 leading-none uppercase ${rarityTextClasses[player.rarity]}`}>
+                                {player.rarity}
+                            </span>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Info Button - Sleek and subtle */}
+            <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                onTouchStart={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onSelect?.(player.id);
+                }}
+                className={`absolute right-1 bottom-1 z-10 flex items-center justify-center rounded-full bg-black/60 text-white/40 hover:bg-[#39ff14] hover:text-black transition-all duration-200 ${
+                    compact ? 'h-4 w-4 opacity-0 group-hover:opacity-100' : 'h-6 w-6'
+                }`}
+                aria-label={`Afficher les statistiques de ${player.name}`}
+            >
+                <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
+                    {compact ? 'expand_less' : 'info'}
+                </span>
+            </button>
+
+            {/* Eligibility Glow Overlay */}
+            {placementStatus && (
+                <div className={`pointer-events-none absolute inset-0 border-2 rounded-md ${
+                    placementStatus === 'best' ? 'border-[#39ff14]/40 animate-pulse' : 
+                    placementStatus === 'adapted' ? 'border-amber-400/40' : 'border-red-500/40'
+                }`} />
+            )}
+        </div>
+    );
+};
+
 const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, selected, compact = false, placementStatus, onSelect }) => {
-    const { ref, isDragging } = useDraggable({
+    const { 
+        ref, 
+        isDragging
+    } = useDraggable({
         id: `player-${player.id}`,
         type: 'player',
         data: { playerId: player.id },
     } as never);
-    const { firstName, lastName } = splitName(player.name);
-
+    
     return (
-        <button
-            ref={ref}
-            type="button"
-            onClick={(event) => {
-                event.stopPropagation();
-                onSelect(player.id);
-            }}
-            className={`relative flex min-w-0 touch-none select-none items-center border bg-black/62 text-left transition-all active:scale-[0.98] ${
-                compact
-                    ? 'h-[clamp(34px,6.4vw,52px)] w-[clamp(46px,8.4vw,84px)] flex-col justify-center gap-0.5 px-1 py-1'
-                    : 'h-10 w-full gap-1.5 px-1.5 py-1'
-            } ${rarityBorderClasses[player.rarity] ?? rarityBorderClasses.Common} ${
-                selected ? 'ring-1 ring-[#39ff14]/80' : ''
-            } ${isDragging ? 'opacity-45' : ''}`}
-            aria-label={`Selectionner ou deplacer ${player.name}`}
-        >
-            <span
-                className={`shrink-0 cursor-grab overflow-hidden rounded border border-white/10 bg-[#121212] active:cursor-grabbing ${
-                    compact ? 'h-[clamp(18px,3vw,28px)] w-[clamp(18px,3vw,28px)]' : 'h-7 w-7'
-                }`}
-            >
-                <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
-            </span>
-            <span className={`min-w-0 ${compact ? 'w-full text-center' : 'flex-1'}`}>
-                <span className={`block truncate font-black uppercase leading-none ${compact ? 'text-[7px] sm:text-[8px]' : 'text-[9px] sm:text-[10px]'} ${rarityTextClasses[player.rarity] ?? rarityTextClasses.Common}`}>
-                    {firstName}
-                </span>
-                <span className={`block truncate font-black uppercase leading-none text-white/58 ${compact ? 'text-[7px] sm:text-[8px]' : 'text-[8px] sm:text-[9px]'}`}>
-                    {lastName || player.mainPosition}
-                </span>
-            </span>
-            {placementStatus && (
-                <span className={`pointer-events-none absolute inset-x-2 bottom-0 h-0.5 rounded-full ${haloClasses[placementStatus]}`} />
-            )}
-        </button>
+        <div ref={ref}>
+            <PlayerChip 
+                player={player}
+                selected={selected}
+                compact={compact}
+                isDragging={isDragging}
+                placementStatus={placementStatus}
+                onSelect={onSelect}
+            />
+        </div>
     );
 };
 
@@ -206,12 +321,12 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
         <div
             ref={ref}
             onClick={() => onPlaceSelectedPlayer(destination)}
-            className={`relative flex items-center justify-center border transition-all ${feedbackClass} ${isDropTarget ? 'scale-[1.04]' : ''} ${
-                bench ? 'h-full min-h-12 p-0.5' : 'min-h-[clamp(38px,7.4vw,60px)] p-0.5'
+            className={`relative flex items-center justify-center rounded-lg border transition-all ${feedbackClass} ${isDropTarget ? 'scale-[1.04]' : ''} ${
+                bench ? 'h-full min-h-14 p-0.5' : 'min-h-[clamp(56px,10vw,70px)] p-0.5'
             }`}
             data-testid={`${destination.area}-${destination.slotId}`}
         >
-            <span className="pointer-events-none absolute left-1 top-0.5 text-[7px] font-black uppercase leading-none tracking-[0.08em] text-white/40">
+            <span className="pointer-events-none absolute left-1 top-0.5 z-10 text-[7px] font-black uppercase leading-none tracking-[0.08em] text-white/40">
                 {slot.label}
             </span>
             {player ? (
@@ -223,7 +338,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
                     onSelect={onSelectPlayer}
                 />
             ) : (
-                <div className="h-[clamp(34px,6.4vw,52px)] w-[clamp(46px,8.4vw,84px)] border border-dashed border-white/10 bg-white/[0.02]" />
+                <div className="h-[clamp(52px,9vw,64px)] w-[clamp(74px,12vw,92px)] rounded-md border border-dashed border-white/10 bg-white/[0.02]" />
             )}
         </div>
     );
@@ -316,6 +431,53 @@ const DetailStat: React.FC<{ label: string; value: string | number; wide?: boole
     </div>
 );
 
+interface SquadListZoneProps {
+    groupedPlayers: Record<PlayerGroup, Player[]>;
+    groupLabels: Record<PlayerGroup, string>;
+    selectedPlayerId: string | null;
+    onSelectPlayer: (playerId: string) => void;
+}
+
+const SquadListZone: React.FC<SquadListZoneProps> = ({ groupedPlayers, groupLabels, selectedPlayerId, onSelectPlayer }) => {
+    const { ref, isDropTarget } = useDroppable({
+        id: 'squad-list-dropzone',
+        data: { destination: { area: 'unassign', slotId: 'root' } },
+    } as never);
+
+    return (
+        <aside 
+            ref={ref}
+            className={`min-h-0 overflow-hidden rounded-xl border transition-all ${
+                isDropTarget ? 'border-[#39ff14]/60 bg-[#39ff14]/5' : 'border-white/10 bg-white/[0.03]'
+            } backdrop-blur-2xl`}
+        >
+            <div className="border-b border-white/10 px-2 py-2">
+                <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Effectif</p>
+            </div>
+            <div className="h-[calc(100%-37px)] overflow-y-auto px-1.5 py-2">
+                {(Object.keys(groupLabels) as PlayerGroup[]).map((group) => (
+                    <section key={group} className="mb-3 last:mb-0">
+                        <div className="mb-1 flex items-center justify-between gap-1">
+                            <p className="truncate text-[8px] font-black uppercase tracking-[0.15em] text-white/35">{groupLabels[group]}</p>
+                            <span className="text-[8px] font-black text-[#39ff14]/70">{groupedPlayers[group].length}</span>
+                        </div>
+                        <div className="space-y-1">
+                            {groupedPlayers[group].map((player) => (
+                                <DraggablePlayer
+                                    key={player.id}
+                                    player={player}
+                                    selected={selectedPlayerId === player.id}
+                                    onSelect={onSelectPlayer}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        </aside>
+    );
+};
+
 const TacticsScreen: React.FC = () => {
     const {
         formation,
@@ -331,8 +493,10 @@ const TacticsScreen: React.FC = () => {
         initializeLineup,
         setFormation,
         setGameInstruction,
-        movePlayerToSlot,
     } = useSquadStore();
+    
+    const movePlayerToSlot = useSquadStore((s) => s.movePlayerToSlot);
+
     const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [detailTab, setDetailTab] = useState<DetailTab>('resume');
@@ -350,8 +514,18 @@ const TacticsScreen: React.FC = () => {
     const formationSlots = useMemo(() => LineupService.getFormationSlots(formation), [formation]);
     const benchDefinitions = useMemo(() => LineupService.getBenchSlots(), []);
     const instructions = useMemo(() => TacticalInstructionService.getInstructions(), []);
+    
+    // Track assigned IDs to filter squad list
+    const assignedIds = useMemo(() => {
+        const ids = new Set<string>();
+        Object.values(lineupSlots).forEach((id) => id && ids.add(id));
+        Object.values(benchSlots).forEach((id) => id && ids.add(id));
+        return ids;
+    }, [lineupSlots, benchSlots]);
+
     const draggedPlayer = draggedPlayerId ? playersById.get(draggedPlayerId) ?? null : null;
     const selectedPlayer = selectedPlayerId ? playersById.get(selectedPlayerId) ?? null : null;
+    
     const groupedPlayers = useMemo(() => {
         const groups: Record<PlayerGroup, Player[]> = {
             goalkeepers: [],
@@ -361,12 +535,13 @@ const TacticsScreen: React.FC = () => {
         };
 
         roster
-            .slice()
+            .filter((p) => !assignedIds.has(p.id))
             .sort((left, right) => right.overallRating - left.overallRating)
             .forEach((player) => groups[getPlayerGroup(player)].push(player));
 
         return groups;
-    }, [roster]);
+    }, [roster, assignedIds]);
+
     const stats: Record<(typeof statItems)[number][1], number> = {
         overallRating,
         attack: composites.attack,
@@ -477,31 +652,12 @@ const TacticsScreen: React.FC = () => {
                     </header>
 
                     <section className="grid min-h-0 flex-1 grid-cols-[minmax(108px,34vw)_minmax(0,1fr)] gap-2 sm:grid-cols-[minmax(190px,25vw)_minmax(0,1fr)] sm:gap-3">
-                        <aside className="min-h-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-2xl">
-                            <div className="border-b border-white/10 px-2 py-2">
-                                <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Effectif</p>
-                            </div>
-                            <div className="h-[calc(100%-37px)] overflow-y-auto px-1.5 py-2">
-                                {(Object.keys(groupLabels) as PlayerGroup[]).map((group) => (
-                                    <section key={group} className="mb-3 last:mb-0">
-                                        <div className="mb-1 flex items-center justify-between gap-1">
-                                            <p className="truncate text-[8px] font-black uppercase tracking-[0.15em] text-white/35">{groupLabels[group]}</p>
-                                            <span className="text-[8px] font-black text-[#39ff14]/70">{groupedPlayers[group].length}</span>
-                                        </div>
-                                        <div className="space-y-1">
-                                            {groupedPlayers[group].map((player) => (
-                                                <DraggablePlayer
-                                                    key={player.id}
-                                                    player={player}
-                                                    selected={selectedPlayerId === player.id}
-                                                    onSelect={handleSelectPlayer}
-                                                />
-                                            ))}
-                                        </div>
-                                    </section>
-                                ))}
-                            </div>
-                        </aside>
+                        <SquadListZone 
+                            groupedPlayers={groupedPlayers}
+                            groupLabels={groupLabels}
+                            selectedPlayerId={selectedPlayerId}
+                            onSelectPlayer={handleSelectPlayer}
+                        />
 
                         <section className="flex min-h-0 flex-col gap-2">
                             <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-[#39ff14]/25 bg-[#09130d] shadow-[inset_0_0_60px_rgba(57,255,20,0.09)]">
@@ -514,7 +670,7 @@ const TacticsScreen: React.FC = () => {
                                 {formationSlots.map((slot) => (
                                     <div
                                         key={slot.id}
-                                        className="absolute w-[clamp(48px,8.8vw,94px)] -translate-x-1/2 -translate-y-1/2"
+                                        className="absolute w-[clamp(74px,12vw,92px)] -translate-x-1/2 -translate-y-1/2"
                                         style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                                     >
                                         <DroppableSlot
@@ -530,7 +686,7 @@ const TacticsScreen: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div className="grid h-[clamp(58px,13dvh,86px)] shrink-0 grid-cols-5 gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-2xl">
+                            <div className="grid h-[clamp(64px,15dvh,96px)] shrink-0 grid-cols-5 gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-2xl">
                                 {benchDefinitions.map((slot) => (
                                     <DroppableSlot
                                         key={slot.id}
@@ -557,6 +713,14 @@ const TacticsScreen: React.FC = () => {
                         onClose={() => setSelectedPlayerId(null)}
                     />
                 )}
+
+                <DragOverlay dropAnimation={null}>
+                    {draggedPlayer ? (
+                        <div className="z-50 scale-105 opacity-80 shadow-2xl shadow-black/80">
+                            <PlayerChip player={draggedPlayer} compact />
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </div>
         </DragDropProvider>
     );

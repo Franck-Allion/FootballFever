@@ -215,7 +215,8 @@ GPT-5
 - Added unit and component coverage for formation slots, GK constraints, eligibility feedback, swaps, live rating recomputation, and tactics screen controls.
 - Updated formation changes to preserve existing starters where possible instead of resetting the lineup, with persistent green/orange/red placement badges on assigned player tokens.
 - Redesigned the tactics screen for mobile portrait and landscape with top formation/instruction selects, left grouped squad list, right pitch/bench surface, compact player chips, and click-to-open player detail tabs.
-- Fixed mobile drag-and-drop affordance by making the full player chip draggable, declaring player/drop target types, and adding a tap-to-place fallback for selected players.
+- Fixed mobile drag-and-drop affordance by separating the stats click from a dedicated drag handle, declaring player/drop target types, adding a chip ghost overlay, and keeping tap-to-place as a fallback for selected players.
+- Updated player chips so the stats action is a dedicated info button and every other area of the chip starts drag-and-drop.
 
 ### File List
 
@@ -240,4 +241,5 @@ GPT-5
 - 2026-05-04: Implemented drag-and-drop lineup editor, tactical instruction state, Hub navigation, and validation tests.
 - 2026-05-04: Changed formation switching to preserve coach assignments where possible and flag optimal, secondary, or out-of-position placements visually.
 - 2026-05-05: Reworked tactics UI for mobile-first use: top selectors, grouped squad list, compact pitch tokens, halo status feedback, and tabbed player details.
-- 2026-05-05: Fixed squad-to-pitch placement by widening the draggable handle to the full player chip and adding selected-player tap placement for mobile reliability.
+- 2026-05-05: Fixed squad-to-pitch placement with a dedicated drag handle, drag ghost overlay, explicit drop acceptance, and selected-player tap placement for mobile reliability.
+- 2026-05-05: Swapped the interaction model: info button opens stats, the rest of the player chip is the drag source.

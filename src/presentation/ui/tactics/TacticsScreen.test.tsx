@@ -75,7 +75,7 @@ describe('TacticsScreen', () => {
         const striker = useSquadStore.getState().roster.find((player) => player.mainPosition === 'ST');
         expect(striker).toBeDefined();
 
-        const playerButton = container.querySelector(`button[aria-label="Selectionner ou deplacer ${striker!.name}"]`);
+        const playerButton = container.querySelector(`button[aria-label="Afficher les statistiques de ${striker!.name}"]`);
         const pitchSlot = container.querySelector('[data-testid="pitch-st"]');
         expect(playerButton).not.toBeNull();
         expect(pitchSlot).not.toBeNull();
