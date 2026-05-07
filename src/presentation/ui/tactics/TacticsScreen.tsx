@@ -21,6 +21,7 @@ import { useSquadStore } from '@domains/shared/store/useSquadStore';
 
 type PlayerGroup = 'goalkeepers' | 'defenders' | 'midfielders' | 'attackers';
 type DetailTab = 'resume' | 'stats' | 'forme';
+type StatsSubTab = 'technique' | 'mental';
 
 const rarityTextClasses: Record<string, string> = {
     Common: 'text-zinc-400',
@@ -89,22 +90,28 @@ const getPlayerGroup = (player: Player): PlayerGroup => {
 
 const readDragData = (entry: unknown): Record<string, unknown> => {
     const candidate = entry as { data?: Record<string, unknown> | { current?: Record<string, unknown> } } | undefined;
-    if (!candidate?.data) return {};
-    if ('current' in candidate.data) return candidate.data.current ?? {};
+    if (!candidate) return {};
+    
+    // In @dnd-kit/react, data is usually directly on the entry or in entry.data
+    // In @dnd-kit/core, it was in entry.data.current
+    const data = candidate.data ?? candidate;
+    if (typeof data === 'object' && data !== null && 'current' in data) {
+        return (data as { current: Record<string, unknown> }).current ?? {};
+    }
 
-    return candidate.data;
+    return (data as Record<string, unknown>) ?? {};
 };
 
 const readEventSource = (event: unknown): unknown => {
     const candidate = event as { operation?: { source?: unknown }; source?: unknown; active?: unknown };
 
-    return candidate.operation?.source ?? candidate.source ?? candidate.active;
+    return candidate.active ?? candidate.operation?.source ?? candidate.source;
 };
 
 const readEventTarget = (event: unknown): unknown => {
     const candidate = event as { operation?: { target?: unknown }; target?: unknown; over?: unknown };
 
-    return candidate.operation?.target ?? candidate.target ?? candidate.over;
+    return candidate.over ?? candidate.operation?.target ?? candidate.target;
 };
 
 const readEntityId = (entry: unknown): string | null => {
@@ -174,13 +181,10 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
             {compact ? (
                 // PITCH/BENCH COMPACT DESIGN
                 <div className="flex flex-col h-full w-full">
-                    {/* Header: Rating & Position */}
-                    <div className="flex justify-between items-center px-1.5 py-0.5 bg-black/40 backdrop-blur-sm border-b border-white/5">
+                    {/* Header: Rating Only */}
+                    <div className="flex justify-center items-center px-1.5 py-0.5 bg-black/40 backdrop-blur-sm border-b border-white/5">
                         <span className="text-[10px] sm:text-[11px] font-black leading-none text-white tracking-tighter">
                             {player.overallRating}
-                        </span>
-                        <span className="text-[8px] font-black leading-none text-white/50 uppercase">
-                            {player.mainPosition}
                         </span>
                     </div>
 
@@ -266,7 +270,9 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
 const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, selected, compact = false, placementStatus, onSelect }) => {
     const { 
         ref, 
-        isDragging
+        isDragging,
+        listeners,
+        attributes
     } = useDraggable({
         id: `player-${player.id}`,
         type: 'player',
@@ -274,7 +280,7 @@ const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, selected, com
     } as never);
     
     return (
-        <div ref={ref}>
+        <div ref={ref} {...listeners} {...attributes}>
             <PlayerChip 
                 player={player}
                 selected={selected}
@@ -347,87 +353,231 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
 interface PlayerDetailsProps {
     player: Player;
     tab: DetailTab;
+    sourceArea?: 'squad' | 'pitch' | 'bench';
     onTabChange: (tab: DetailTab) => void;
     onClose: () => void;
 }
 
-const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, onTabChange, onClose }) => {
-    const stats = Object.entries(player.stats).filter(([, value]) => typeof value === 'number');
+const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea = 'squad', onTabChange, onClose }) => {
+    const [statsSubTab, setStatsSubTab] = useState<StatsSubTab>('technique');
     const secondary = player.secondaryPositions.length > 0 ? player.secondaryPositions.join(', ') : 'Aucun';
 
-    return (
-        <section className="fixed inset-x-2 bottom-2 z-50 max-h-[48dvh] overflow-hidden rounded-xl border border-[#39ff14]/35 bg-[#080a08]/95 shadow-[0_0_42px_rgba(0,0,0,0.85)] backdrop-blur-xl sm:left-auto sm:right-4 sm:w-[380px]">
-            <div className="flex items-center gap-2 border-b border-white/10 p-2">
-                <span className="h-10 w-10 shrink-0 overflow-hidden rounded border border-white/10 bg-[#121212]">
-                    <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
-                </span>
-                <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-black uppercase leading-tight ${rarityTextClasses[player.rarity] ?? rarityTextClasses.Common}`}>
-                        {player.name}
-                    </p>
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">
-                        {player.mainPosition} / {player.rarity}
-                    </p>
+    const isCentered = sourceArea === 'pitch' || sourceArea === 'bench';
+
+    // Split stats into two groups
+    const statsGroups = useMemo(() => {
+        const entries = Object.entries(player.stats).filter(([, v]) => typeof v === 'number') as [string, number][];
+        
+        if (player.mainPosition === 'GK') {
+            return {
+                technique: entries.filter(([k]) => ['lineSaving', 'reflexes', 'diving', 'oneOnOne', 'aerialClaim', 'cornerClaim'].includes(k)),
+                mental: entries.filter(([k]) => ['handDistribution', 'kicking', 'positioning', 'communication', 'composure'].includes(k))
+            };
+        }
+
+        return {
+            technique: entries.filter(([k]) => ['passing', 'vision', 'technique', 'dribbling', 'shooting', 'finishing', 'clearance', 'tackling'].includes(k)),
+            mental: entries.filter(([k]) => ['positioning', 'marking', 'pace', 'acceleration', 'stamina', 'power', 'duels', 'heading', 'composure'].includes(k))
+        };
+    }, [player.stats, player.mainPosition]);
+
+    const containerClasses = isCentered
+        ? 'fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 border-white/20 bg-[#0a0c0a]/98 shadow-[0_0_80px_rgba(0,0,0,0.9),0_0_30px_rgba(57,255,20,0.15)] backdrop-blur-2xl'
+        : 'mt-1 w-full rounded-xl border border-white/10 bg-black/60 backdrop-blur-xl overflow-hidden shadow-xl animate-in fade-in slide-in-from-top-2 duration-300';
+
+    const content = (
+        <div className="flex flex-col">
+            {/* Header - Only shown when centered/modal (pitch/bench) to avoid redundancy in squad list */}
+            {isCentered && (
+                <div className={`flex items-center gap-3 border-b border-white/10 p-3 ${rarityBgClasses[player.rarity] || 'bg-zinc-900/50'}`}>
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 border-white/20 bg-black shadow-lg">
+                        <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
+                        <div className="absolute bottom-0 right-0 bg-[#39ff14] px-1.5 py-0.5 text-[10px] font-black leading-none text-black">
+                            {player.overallRating}
+                        </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <h3 className={`truncate text-lg font-black uppercase leading-none tracking-tight ${rarityTextClasses[player.rarity]}`}>
+                            {player.name}
+                        </h3>
+                        <div className="mt-1 flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                                {player.mainPosition}
+                            </span>
+                            <div className="h-1 w-1 rounded-full bg-white/20" />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${rarityTextClasses[player.rarity]}`}>
+                                {player.rarity}
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/50 transition-all hover:border-[#39ff14]/50 hover:text-[#39ff14] hover:bg-black/60"
+                    >
+                        <span className="material-symbols-outlined text-xl">close</span>
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-black/45 text-white/65 hover:border-[#39ff14]/60 hover:text-[#39ff14]"
-                    aria-label="Fermer les statistiques du joueur"
-                >
-                    <span className="material-symbols-outlined text-base" aria-hidden="true">close</span>
-                </button>
-            </div>
-            <div className="grid grid-cols-3 border-b border-white/10">
+            )}
+
+            {/* Tabs */}
+            <div className="flex border-b border-white/5 bg-black/20">
                 {(['resume', 'stats', 'forme'] as DetailTab[]).map((item) => (
                     <button
                         key={item}
                         type="button"
                         onClick={() => onTabChange(item)}
-                        className={`h-9 text-[9px] font-black uppercase tracking-[0.18em] ${
-                            tab === item ? 'bg-[#39ff14] text-black' : 'bg-black/30 text-white/55 hover:text-[#39ff14]'
+                        className={`relative flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                            tab === item ? 'text-[#39ff14]' : 'text-white/40 hover:text-white/70'
                         }`}
                     >
                         {item}
+                        {tab === item && (
+                            <span className="absolute bottom-0 left-0 h-0.5 w-full bg-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.8)]" />
+                        )}
                     </button>
                 ))}
             </div>
-            <div className="max-h-[calc(48dvh-92px)] overflow-y-auto p-3">
+
+            {/* Sub-tabs for Stats */}
+            {tab === 'stats' && (
+                <div className="flex gap-4 px-4 py-2 bg-white/5 border-b border-white/5">
+                    {(['technique', 'mental'] as StatsSubTab[]).map((sub) => (
+                        <button
+                            key={sub}
+                            type="button"
+                            onClick={() => setStatsSubTab(sub)}
+                            className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
+                                statsSubTab === sub ? 'text-white' : 'text-white/30 hover:text-white/60'
+                            }`}
+                        >
+                            {sub === 'technique' ? 'Technique' : 'Physique & Mental'}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Content Area */}
+            <div className="max-h-[380px] overflow-y-auto p-4 custom-scrollbar">
                 {tab === 'resume' && (
-                    <div className="grid grid-cols-2 gap-2">
-                        <DetailStat label="Note" value={player.overallRating} />
-                        <DetailStat label="Poste" value={player.mainPosition} />
-                        <DetailStat label="Secondaire" value={secondary} wide />
-                        <DetailStat label="Age" value={player.age} />
-                        <DetailStat label="Valeur" value={player.prestigeValue.toLocaleString('fr-FR')} />
+                    <div className="grid grid-cols-2 gap-3">
+                        <DetailStat label="Général" value={player.overallRating} highlight />
+                        <DetailStat label="Poste Principal" value={player.mainPosition} />
+                        <DetailStat label="Rôles Secondaires" value={secondary} wide />
+                        <DetailStat label="Âge" value={`${player.age} ans`} />
+                        <DetailStat label="Valeur Marchande" value={`${player.prestigeValue.toLocaleString('fr-FR')} €`} />
                     </div>
                 )}
                 {tab === 'stats' && (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        {stats.map(([key, value]) => (
-                            <DetailStat key={key} label={key} value={value} />
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                        {statsGroups[statsSubTab].map(([key, value]) => (
+                            <StatBar key={key} statKey={key} value={value} />
                         ))}
                     </div>
                 )}
                 {tab === 'forme' && (
-                    <div className="grid grid-cols-2 gap-2">
-                        <DetailStat label="Moral" value={player.morale} />
-                        <DetailStat label="Condition" value={player.condition} />
-                        <DetailStat label="Endurance" value={player.stamina} />
+                    <div className="grid grid-cols-2 gap-3">
+                        <DetailStat label="Moral" value={player.morale} progress />
+                        <DetailStat label="Condition" value={player.condition} progress />
+                        <DetailStat label="Endurance" value={player.stamina} progress />
                         <DetailStat label="Niveau" value={player.level} />
-                        <DetailStat label="XP" value={player.xp} />
-                        <DetailStat label="Potentiel" value={player.potential} />
+                        <DetailStat label="Expérience" value={player.xp} />
+                        <DetailStat label="Potentiel" value={player.potential} progress />
                     </div>
                 )}
             </div>
+        </div>
+    );
+
+    if (isCentered) {
+        return (
+            <>
+                <div 
+                    className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" 
+                    onClick={onClose}
+                />
+                <section className={containerClasses}>
+                    {content}
+                </section>
+            </>
+        );
+    }
+
+    return (
+        <section className={containerClasses}>
+            {content}
         </section>
     );
 };
 
-const DetailStat: React.FC<{ label: string; value: string | number; wide?: boolean }> = ({ label, value, wide = false }) => (
-    <div className={`border border-white/10 bg-black/35 px-2 py-1.5 ${wide ? 'col-span-2' : ''}`}>
-        <p className="truncate text-[8px] font-black uppercase tracking-[0.14em] text-white/35">{label}</p>
-        <p className="truncate text-sm font-black text-white">{value}</p>
+const StatBar: React.FC<{ statKey: string; value: number }> = ({ statKey, value }) => {
+    const labelMapping: Record<string, string> = {
+        // Field
+        tackling: 'Tacle', marking: 'Marquage', positioning: 'Placement',
+        passing: 'Passe', vision: 'Vision', clearance: 'Dégagement',
+        technique: 'Technique', dribbling: 'Dribble', pace: 'Vitesse',
+        acceleration: 'Accélération', stamina: 'Endurance', power: 'Puissance',
+        duels: 'Duels', heading: 'Jeu de tête', shooting: 'Tir',
+        finishing: 'Finition', composure: 'Sang-froid',
+        // GK
+        lineSaving: 'Arrêt ligne', reflexes: 'Réflexes', diving: 'Plongeon',
+        oneOnOne: 'Face à face', aerialClaim: 'Prise aérienne', cornerClaim: 'Prise corner',
+        handDistribution: 'Relance main', kicking: 'Dégagement pied', communication: 'Com.'
+    };
+
+    return (
+        <div className="group flex flex-col gap-1 rounded-md bg-white/[0.03] p-2 transition-colors hover:bg-white/10">
+            <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase tracking-wider text-white/50 group-hover:text-white/80 transition-colors">
+                    {labelMapping[statKey] || statKey}
+                </span>
+                <span className={`text-[11px] font-black ${
+                    value > 85 ? 'text-[#39ff14]' : value > 70 ? 'text-blue-400' : value > 50 ? 'text-white' : 'text-red-400'
+                }`}>
+                    {value}
+                </span>
+            </div>
+            <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                <div 
+                    className={`h-full transition-all duration-700 ease-out ${
+                        value > 85 ? 'bg-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.4)]' : 
+                        value > 70 ? 'bg-blue-400' : 
+                        value > 50 ? 'bg-zinc-400' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${value}%` }}
+                />
+            </div>
+        </div>
+    );
+};
+
+const DetailStat: React.FC<{ 
+    label: string; 
+    value: string | number; 
+    wide?: boolean; 
+    highlight?: boolean;
+    progress?: boolean;
+}> = ({ label, value, wide = false, highlight = false, progress = false }) => (
+    <div className={`relative flex flex-col justify-between overflow-hidden rounded-lg border border-white/5 bg-white/5 p-2.5 transition-colors hover:bg-white/10 ${wide ? 'col-span-2' : ''}`}>
+        <div className="flex justify-between items-start gap-1">
+            <p className="truncate text-[9px] font-black uppercase tracking-wider text-white/30">{label}</p>
+            {highlight && <span className="h-1.5 w-1.5 rounded-full bg-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.8)]" />}
+        </div>
+        <div className="mt-1 flex items-baseline gap-2">
+            <p className={`truncate text-base font-black tracking-tight ${highlight ? 'text-[#39ff14]' : 'text-white'}`}>
+                {value}
+            </p>
+        </div>
+        {progress && typeof value === 'number' && (
+            <div className="mt-2 h-1 w-full rounded-full bg-black/40 overflow-hidden">
+                <div 
+                    className={`h-full transition-all duration-1000 ${
+                        value > 80 ? 'bg-[#39ff14]' : value > 50 ? 'bg-amber-400' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${value}%` }}
+                />
+            </div>
+        )}
     </div>
 );
 
@@ -435,12 +585,26 @@ interface SquadListZoneProps {
     groupedPlayers: Record<PlayerGroup, Player[]>;
     groupLabels: Record<PlayerGroup, string>;
     selectedPlayerId: string | null;
-    onSelectPlayer: (playerId: string) => void;
+    selectedPlayer: Player | null;
+    detailTab: DetailTab;
+    onSelectPlayer: (playerId: string, area: 'squad' | 'pitch' | 'bench') => void;
+    onTabChange: (tab: DetailTab) => void;
+    onCloseDetails: () => void;
 }
 
-const SquadListZone: React.FC<SquadListZoneProps> = ({ groupedPlayers, groupLabels, selectedPlayerId, onSelectPlayer }) => {
+const SquadListZone: React.FC<SquadListZoneProps> = ({ 
+    groupedPlayers, 
+    groupLabels, 
+    selectedPlayerId, 
+    selectedPlayer,
+    detailTab,
+    onSelectPlayer, 
+    onTabChange,
+    onCloseDetails
+}) => {
     const { ref, isDropTarget } = useDroppable({
         id: 'squad-list-dropzone',
+        accept: 'player',
         data: { destination: { area: 'unassign', slotId: 'root' } },
     } as never);
 
@@ -454,7 +618,7 @@ const SquadListZone: React.FC<SquadListZoneProps> = ({ groupedPlayers, groupLabe
             <div className="border-b border-white/10 px-2 py-2">
                 <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Effectif</p>
             </div>
-            <div className="h-[calc(100%-37px)] overflow-y-auto px-1.5 py-2">
+            <div className="h-[calc(100%-37px)] overflow-y-auto px-1.5 py-2 custom-scrollbar">
                 {(Object.keys(groupLabels) as PlayerGroup[]).map((group) => (
                     <section key={group} className="mb-3 last:mb-0">
                         <div className="mb-1 flex items-center justify-between gap-1">
@@ -463,12 +627,22 @@ const SquadListZone: React.FC<SquadListZoneProps> = ({ groupedPlayers, groupLabe
                         </div>
                         <div className="space-y-1">
                             {groupedPlayers[group].map((player) => (
-                                <DraggablePlayer
-                                    key={player.id}
-                                    player={player}
-                                    selected={selectedPlayerId === player.id}
-                                    onSelect={onSelectPlayer}
-                                />
+                                <div key={player.id} className="flex flex-col">
+                                    <DraggablePlayer
+                                        player={player}
+                                        selected={selectedPlayerId === player.id}
+                                        onSelect={(id) => onSelectPlayer(id, 'squad')}
+                                    />
+                                    {selectedPlayerId === player.id && selectedPlayer && (
+                                        <PlayerDetails 
+                                            player={selectedPlayer}
+                                            tab={detailTab}
+                                            sourceArea="squad"
+                                            onTabChange={onTabChange}
+                                            onClose={onCloseDetails}
+                                        />
+                                    )}
+                                </div>
                             ))}
                         </div>
                     </section>
@@ -499,6 +673,7 @@ const TacticsScreen: React.FC = () => {
 
     const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+    const [selectedSourceArea, setSelectedSourceArea] = useState<'squad' | 'pitch' | 'bench' | null>(null);
     const [detailTab, setDetailTab] = useState<DetailTab>('resume');
 
     useEffect(() => {
@@ -555,9 +730,15 @@ const TacticsScreen: React.FC = () => {
         FlowService.getInstance().navigateTo(GameState.HUB);
     };
 
-    const handleSelectPlayer = (playerId: string) => {
-        setSelectedPlayerId(playerId);
-        setDetailTab('resume');
+    const handleSelectPlayer = (playerId: string, area: 'squad' | 'pitch' | 'bench') => {
+        if (selectedPlayerId === playerId && selectedSourceArea === area) {
+            setSelectedPlayerId(null);
+            setSelectedSourceArea(null);
+        } else {
+            setSelectedPlayerId(playerId);
+            setSelectedSourceArea(area);
+            setDetailTab('resume');
+        }
     };
 
     const handlePlaceSelectedPlayer = (destination: AssignmentDestination) => {
@@ -565,7 +746,8 @@ const TacticsScreen: React.FC = () => {
 
         const moved = movePlayerToSlot(selectedPlayerId, destination);
         if (moved) {
-            setSelectedPlayerId(selectedPlayerId);
+            // After moving, keep it selected but update its position context
+            setSelectedSourceArea(destination.area);
         }
     };
 
@@ -656,7 +838,11 @@ const TacticsScreen: React.FC = () => {
                             groupedPlayers={groupedPlayers}
                             groupLabels={groupLabels}
                             selectedPlayerId={selectedPlayerId}
+                            selectedPlayer={selectedSourceArea === 'squad' ? selectedPlayer : null}
+                            detailTab={detailTab}
                             onSelectPlayer={handleSelectPlayer}
+                            onTabChange={setDetailTab}
+                            onCloseDetails={() => setSelectedPlayerId(null)}
                         />
 
                         <section className="flex min-h-0 flex-col gap-2">
@@ -679,7 +865,7 @@ const TacticsScreen: React.FC = () => {
                                             slot={slot}
                                             draggedPlayer={draggedPlayer}
                                             selectedPlayerId={selectedPlayerId}
-                                            onSelectPlayer={handleSelectPlayer}
+                                            onSelectPlayer={(id) => handleSelectPlayer(id, 'pitch')}
                                             onPlaceSelectedPlayer={handlePlaceSelectedPlayer}
                                         />
                                     </div>
@@ -695,7 +881,7 @@ const TacticsScreen: React.FC = () => {
                                         slot={slot}
                                         draggedPlayer={draggedPlayer}
                                         selectedPlayerId={selectedPlayerId}
-                                        onSelectPlayer={handleSelectPlayer}
+                                        onSelectPlayer={(id) => handleSelectPlayer(id, 'bench')}
                                         onPlaceSelectedPlayer={handlePlaceSelectedPlayer}
                                         bench
                                     />
@@ -705,10 +891,11 @@ const TacticsScreen: React.FC = () => {
                     </section>
                 </main>
 
-                {selectedPlayer && (
+                {selectedPlayer && (selectedSourceArea === 'pitch' || selectedSourceArea === 'bench') && (
                     <PlayerDetails
                         player={selectedPlayer}
                         tab={detailTab}
+                        sourceArea={selectedSourceArea}
                         onTabChange={setDetailTab}
                         onClose={() => setSelectedPlayerId(null)}
                     />
