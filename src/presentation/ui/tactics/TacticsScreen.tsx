@@ -148,6 +148,7 @@ interface PlayerChipProps {
     compact?: boolean;
     selected?: boolean;
     isDragging?: boolean;
+    slot?: FormationSlot | BenchSlot; // Added to calculate context-aware rating
     placementStatus?: Eligibility;
     onSelect?: (playerId: string) => void;
 }
@@ -157,10 +158,19 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
     compact, 
     selected, 
     isDragging, 
+    slot,
     placementStatus, 
     onSelect
 }) => {
     const displayName = useMemo(() => getDisplayName(player.name), [player.name]);
+    
+    // Calculate context-aware rating if a slot is provided
+    const displayRating = useMemo(() => {
+        if (!slot) return player.overallRating;
+        return LineupService.getAdjustedRating(player, slot);
+    }, [player, slot]);
+
+    const isPenalized = slot && displayRating < player.overallRating;
     
     return (
         <div
@@ -172,6 +182,8 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                 rarityBorderClasses[player.rarity] ?? rarityBorderClasses.Common
             } ${
                 selected ? 'ring-2 ring-[#39ff14] z-20 shadow-[0_0_20px_rgba(57,255,20,0.3)]' : ''
+            } ${
+                isPenalized ? 'ring-2 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)] z-10' : ''
             } ${isDragging ? 'opacity-40 scale-95' : 'hover:brightness-110 active:scale-95'}`}
         >
             {/* Glossy Overlay */}
@@ -181,11 +193,18 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
             {compact ? (
                 // PITCH/BENCH COMPACT DESIGN
                 <div className="flex flex-col h-full w-full">
-                    {/* Header: Rating Only */}
-                    <div className="flex justify-center items-center px-1.5 py-0.5 bg-black/40 backdrop-blur-sm border-b border-white/5">
-                        <span className="text-[10px] sm:text-[11px] font-black leading-none text-white tracking-tighter">
-                            {player.overallRating}
+                    {/* Header: Rating & Penalty Indicators (Top Left Corner Badge - Absolute) */}
+                    <div className={`absolute left-0 top-0 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-br-lg border-r border-b border-white/10 backdrop-blur-md shadow-lg ${
+                        isPenalized ? 'bg-red-600 animate-pulse' : 'bg-black/80'
+                    }`}>
+                        <span className="text-[11px] sm:text-[12px] font-black leading-none tracking-tighter text-white">
+                            {displayRating}
                         </span>
+                        {isPenalized && (
+                            <span className="material-symbols-outlined text-[10px] font-bold text-white">
+                                arrow_downward
+                            </span>
+                        )}
                     </div>
 
                     {/* Body: Portrait (Larger, centered) */}
@@ -197,10 +216,13 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                         />
                     </div>
 
-                    {/* Footer: Name (Maximum readability) */}
-                    <div className="bg-black/60 px-1 py-1 backdrop-blur-md">
-                        <span className="block truncate text-center font-black uppercase text-[9px] sm:text-[10px] leading-none tracking-tight text-white drop-shadow-md">
+                    {/* Footer: Name & Natural Position Badge */}
+                    <div className="bg-black/60 px-1 py-1 backdrop-blur-md flex items-center gap-1">
+                        <span className="block truncate flex-1 text-center font-black uppercase text-[9px] sm:text-[10px] leading-none tracking-tight text-white drop-shadow-md">
                             {displayName}
+                        </span>
+                        <span className="shrink-0 text-[7px] font-black leading-none text-white/70 bg-white/10 px-1 py-0.5 rounded-sm border border-white/5 uppercase">
+                            {player.mainPosition}
                         </span>
                     </div>
                 </div>
@@ -267,7 +289,14 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
     );
 };
 
-const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, selected, compact = false, placementStatus, onSelect }) => {
+const DraggablePlayer: React.FC<DraggablePlayerProps & { slot?: FormationSlot | BenchSlot }> = ({ 
+    player, 
+    selected, 
+    compact = false, 
+    placementStatus, 
+    slot,
+    onSelect 
+}) => {
     const { 
         ref, 
         isDragging,
@@ -286,6 +315,7 @@ const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, selected, com
                 selected={selected}
                 compact={compact}
                 isDragging={isDragging}
+                slot={slot}
                 placementStatus={placementStatus}
                 onSelect={onSelect}
             />
@@ -304,6 +334,32 @@ interface DroppableSlotProps {
     bench?: boolean;
 }
 
+const positionDescriptions: Record<string, string> = {
+    GK: 'Gardien',
+    LB: 'Défenseur Gauche',
+    CB: 'Défenseur Central',
+    RB: 'Défenseur Droit',
+    LWB: 'Piston Gauche',
+    RWB: 'Piston Droit',
+    CDM: 'Milieu Défensif',
+    CM: 'Milieu Central',
+    CAM: 'Milieu Offensif',
+    LM: 'Milieu Gauche',
+    RM: 'Milieu Droit',
+    LW: 'Attaquant Gauche',
+    RW: 'Attaquant Droit',
+    ST: 'Buteur',
+    CF: 'Attaquant',
+};
+
+const roleColors: Record<string, { text: string; bg: string; border: string }> = {
+    GK: { text: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-400/30' },
+    DEF: { text: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/30' },
+    MID: { text: 'text-[#39ff14]', bg: 'bg-[#39ff14]/10', border: 'border-[#39ff14]/30' },
+    ATT: { text: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/30' },
+    FIELD: { text: 'text-zinc-400', bg: 'bg-white/5', border: 'border-white/20' },
+};
+
 const DroppableSlot: React.FC<DroppableSlotProps> = ({
     destination,
     player,
@@ -319,33 +375,52 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
         accept: 'player',
         data: { destination },
     } as never);
+    
     const dragEligibility = draggedPlayer ? LineupService.getPositionEligibility(draggedPlayer, slot) : null;
     const placementStatus = player ? LineupService.getPositionEligibility(player, slot) : null;
     const feedbackClass = dragEligibility ? eligibilityClasses[dragEligibility] : 'border-white/10 bg-black/38';
+
+    const role = 'position' in slot ? slot.role : (slot.accepts === 'GK' ? 'GK' : 'FIELD');
+    const colors = roleColors[role] || roleColors.GK;
 
     return (
         <div
             ref={ref}
             onClick={() => onPlaceSelectedPlayer(destination)}
-            className={`relative flex items-center justify-center rounded-lg border transition-all ${feedbackClass} ${isDropTarget ? 'scale-[1.04]' : ''} ${
-                bench ? 'h-full min-h-14 p-0.5' : 'min-h-[clamp(56px,10vw,70px)] p-0.5'
-            }`}
+            className={`relative flex flex-col items-stretch transition-all ${isDropTarget ? 'scale-[1.04]' : ''}`}
             data-testid={`${destination.area}-${destination.slotId}`}
         >
-            <span className="pointer-events-none absolute left-1 top-0.5 z-10 text-[7px] font-black uppercase leading-none tracking-[0.08em] text-white/40">
-                {slot.label}
-            </span>
-            {player ? (
-                <DraggablePlayer
-                    player={player}
-                    selected={selectedPlayerId === player.id}
-                    compact
-                    placementStatus={placementStatus ?? undefined}
-                    onSelect={onSelectPlayer}
-                />
-            ) : (
-                <div className="h-[clamp(52px,9vw,64px)] w-[clamp(74px,12vw,92px)] rounded-md border border-dashed border-white/10 bg-white/[0.02]" />
-            )}
+            {/* 1. Tactical Requirement Header (Flow-based, Above the Card) */}
+            <div className={`z-30 flex items-center justify-between rounded-t-md border-t border-x border-white/10 bg-[#0a0c0a]/90 px-1.5 py-0.5 shadow-lg backdrop-blur-md`}>
+                <span className={`text-[8px] font-black uppercase leading-none tracking-wider ${colors.text}`}>
+                    {slot.label}
+                </span>
+                <span className="text-[6px] font-bold text-white/20 uppercase tracking-tighter truncate ml-1">
+                    {positionDescriptions[slot.label]?.split(' ')[0] || ('id' in slot && slot.id.startsWith('bench') ? 'Remplaçant' : 'Rôle')}
+                </span>
+            </div>
+
+            {/* 2. Player Card / Empty Slot Container */}
+            <div className={`relative flex items-center justify-center rounded-b-lg border-x border-b p-0.5 transition-all ${feedbackClass} ${
+                bench ? 'h-full min-h-14' : 'min-h-[clamp(56px,10vw,70px)]'
+            }`}>
+                {player ? (
+                    <DraggablePlayer
+                        player={player}
+                        selected={selectedPlayerId === player.id}
+                        compact
+                        slot={slot}
+                        placementStatus={placementStatus ?? undefined}
+                        onSelect={onSelectPlayer}
+                    />
+                ) : (
+                    <div className={`flex h-[clamp(52px,9vw,64px)] w-full flex-col items-center justify-center rounded-md border border-dashed border-white/5 bg-white/[0.01] transition-colors ${isDropTarget ? 'bg-white/5' : ''}`}>
+                        <span className="text-[9px] font-black text-white/5 uppercase tracking-widest">
+                            VIDE
+                        </span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
@@ -360,9 +435,30 @@ interface PlayerDetailsProps {
 
 const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea = 'squad', onTabChange, onClose }) => {
     const [statsSubTab, setStatsSubTab] = useState<StatsSubTab>('technique');
-    const secondary = player.secondaryPositions.length > 0 ? player.secondaryPositions.join(', ') : 'Aucun';
+    const { lineupSlots, benchSlots, formation } = useSquadStore();
 
+    const secondary = player.secondaryPositions.length > 0 ? player.secondaryPositions.join(', ') : 'Aucun';
     const isCentered = sourceArea === 'pitch' || sourceArea === 'bench';
+
+    // Find the current slot for context-aware rating
+    const currentSlot = useMemo(() => {
+        if (sourceArea === 'pitch') {
+            const slotId = Object.entries(lineupSlots).find(([, id]) => id === player.id)?.[0];
+            return slotId ? LineupService.getFormationSlots(formation).find((s) => s.id === slotId) : undefined;
+        }
+        if (sourceArea === 'bench') {
+            const slotId = Object.entries(benchSlots).find(([, id]) => id === player.id)?.[0];
+            return slotId ? LineupService.getBenchSlots().find((s) => s.id === slotId) : undefined;
+        }
+        return undefined;
+    }, [player.id, sourceArea, lineupSlots, benchSlots, formation]);
+
+    const displayRating = useMemo(() => {
+        if (!currentSlot) return player.overallRating;
+        return LineupService.getAdjustedRating(player, currentSlot);
+    }, [player, currentSlot]);
+
+    const isPenalized = currentSlot && displayRating < player.overallRating;
 
     // Split stats into two groups
     const statsGroups = useMemo(() => {
@@ -392,8 +488,10 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea =
                 <div className={`flex items-center gap-3 border-b border-white/10 p-3 ${rarityBgClasses[player.rarity] || 'bg-zinc-900/50'}`}>
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 border-white/20 bg-black shadow-lg">
                         <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
-                        <div className="absolute bottom-0 right-0 bg-[#39ff14] px-1.5 py-0.5 text-[10px] font-black leading-none text-black">
-                            {player.overallRating}
+                        <div className={`absolute bottom-0 right-0 px-1.5 py-0.5 text-[10px] font-black leading-none ${
+                            isPenalized ? 'bg-red-600 text-white animate-pulse' : 'bg-[#39ff14] text-black'
+                        }`}>
+                            {displayRating}
                         </div>
                     </div>
                     <div className="min-w-0 flex-1">

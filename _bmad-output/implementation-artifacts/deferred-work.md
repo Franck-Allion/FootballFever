@@ -10,3 +10,8 @@
 ## Deferred from: code review of 13-2-dynamic-team-rating-calculator.md (2026-05-04)
 
 - Data Migration for Team Roster: The change from `string[]` (IDs) to `Player[]` in `Team.roster` requires a database migration or a strategy to handle existing saves that only have IDs.
+
+## Deferred from: code review (2026-05-06)
+
+- Brittle type checking (`as never`): Usage of `as never` in `TacticsScreen.tsx` for `useDraggable`/`useDroppable` bypassing type safety. Deferred as it is a common pre-existing workaround for `dnd-kit`.
+- Magic number dependencies: Unconfigured efficiency multipliers (1.0, 0.85, 0.5, 0.25) in `LineupService.ts` are hardcoded. Deferred as these were introduced intentionally for this iteration.

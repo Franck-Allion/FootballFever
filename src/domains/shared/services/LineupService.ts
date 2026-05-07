@@ -117,14 +117,6 @@ const FORMATIONS: Record<string, FormationSlot[]> = {
     ],
 };
 
-const BENCH_SLOTS: BenchSlot[] = [
-    { id: 'bench-gk', label: 'GK', accepts: 'GK' },
-    { id: 'bench-1', label: 'SUB 1', accepts: 'FIELD' },
-    { id: 'bench-2', label: 'SUB 2', accepts: 'FIELD' },
-    { id: 'bench-3', label: 'SUB 3', accepts: 'FIELD' },
-    { id: 'bench-4', label: 'SUB 4', accepts: 'FIELD' },
-];
-
 const SAME_LINE_GROUPS: RatingPosition[][] = [
     ['LB', 'CB', 'RB', 'LWB', 'RWB'],
     ['CDM', 'CM', 'CAM', 'LM', 'RM'],
@@ -145,6 +137,14 @@ const isSameLine = (left: RatingPosition, right: RatingPosition): boolean => {
     return SAME_LINE_GROUPS.some((group) => group.includes(left) && group.includes(right));
 };
 
+const BENCH_SLOTS: BenchSlot[] = [
+    { id: 'bench-gk', label: 'GK', accepts: 'GK' },
+    { id: 'bench-1', label: 'SUB 1', accepts: 'FIELD' },
+    { id: 'bench-2', label: 'SUB 2', accepts: 'FIELD' },
+    { id: 'bench-3', label: 'SUB 3', accepts: 'FIELD' },
+    { id: 'bench-4', label: 'SUB 4', accepts: 'FIELD' },
+];
+
 export class LineupService {
     public static getSupportedFormations(): string[] {
         return Object.keys(FORMATIONS);
@@ -164,6 +164,33 @@ export class LineupService {
 
     public static createEmptyBench(): AssignmentMap {
         return emptyAssignments(BENCH_SLOTS);
+    }
+
+    public static getPositionEfficiency(player: Player, slot: FormationSlot | BenchSlot): number {
+        if ('accepts' in slot) {
+            if (slot.accepts === 'GK') return isGoalkeeper(player) ? 1.0 : 0.1;
+            
+            return isGoalkeeper(player) ? 0.1 : 1.0;
+        }
+
+        if (slot.position === 'GK') return isGoalkeeper(player) ? 1.0 : 0.1;
+        if (isGoalkeeper(player)) return 0.1;
+
+        if (player.mainPosition === slot.position) return 1.0;
+        if ((player.secondaryPositions || []).includes(slot.position)) return 0.85;
+        if (isSameLine(player.mainPosition, slot.position)) return 0.5;
+        
+        return 0.25;
+    }
+
+    public static getAdjustedRating(player: Player, slot: FormationSlot | BenchSlot): number {
+        const efficiency = LineupService.getPositionEfficiency(player, slot);
+        const positionRating = TeamRatingService.calculatePlayerPositionRating(
+            player, 
+            'position' in slot ? slot.position : player.mainPosition
+        );
+
+        return Math.round(positionRating * efficiency);
     }
 
     public static createInitialAssignments(roster: Player[], formation: string): {
@@ -234,17 +261,10 @@ export class LineupService {
     }
 
     public static getPositionEligibility(player: Player, destination: FormationSlot | BenchSlot): Eligibility {
-        if ('accepts' in destination) {
-            if (destination.accepts === 'GK') return isGoalkeeper(player) ? 'best' : 'invalid';
+        const efficiency = LineupService.getPositionEfficiency(player, destination);
 
-            return isGoalkeeper(player) ? 'invalid' : 'best';
-        }
-
-        if (destination.position === 'GK') return isGoalkeeper(player) ? 'best' : 'invalid';
-        if (isGoalkeeper(player)) return 'invalid';
-        if (player.mainPosition === destination.position) return 'best';
-        if (player.secondaryPositions.includes(destination.position)) return 'adapted';
-        if (isSameLine(player.mainPosition, destination.position)) return 'adapted';
+        if (efficiency >= 0.85) return 'best';
+        if (efficiency >= 0.5) return 'adapted';
 
         return 'invalid';
     }
@@ -270,7 +290,8 @@ export class LineupService {
         }
 
         const destinationSlot = LineupService.getDestinationSlot(input.formation, input.destination);
-        if (!destinationSlot || LineupService.getPositionEligibility(player, destinationSlot) === 'invalid') {
+        // We still check for position-based logical "hard" invalidity (like GK vs Field)
+        if (!destinationSlot || LineupService.getPositionEfficiency(player, destinationSlot) < 0.5) {
             return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
         }
 
@@ -285,7 +306,7 @@ export class LineupService {
             const occupyingPlayer = getPlayer(input.roster, occupyingPlayerId);
             const sourceSlot = LineupService.getDestinationSlot(input.formation, source);
 
-            if (!occupyingPlayer || !sourceSlot || LineupService.getPositionEligibility(occupyingPlayer, sourceSlot) === 'invalid') {
+            if (!occupyingPlayer || !sourceSlot || LineupService.getPositionEfficiency(occupyingPlayer, sourceSlot) < 0.5) {
                 return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
             }
         }
