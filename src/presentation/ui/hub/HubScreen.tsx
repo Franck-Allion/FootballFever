@@ -64,20 +64,28 @@ const HubScreen: React.FC = () => {
         FlowService.getInstance().navigateTo(GameState.TACTICS);
     };
 
-    const assignedEleven = LineupService.getAssignedStarters(roster, formation, lineupSlots);
-    const startingEleven = assignedEleven.length > 0 ? assignedEleven : TeamRatingService.selectStartingEleven(roster, formation);
+    const startingEleven = useMemo(() => {
+        const assignedEleven = LineupService.getAssignedStarters(roster, formation, lineupSlots);
+        return assignedEleven.length > 0 ? assignedEleven : TeamRatingService.selectStartingEleven(roster, formation);
+    }, [roster, formation, lineupSlots]);
+
     const activeInstruction = TacticalInstructionService.getInstruction(gameInstruction);
-    const startingIds = new Set(startingEleven.map(({ player }) => player.id));
-    const assignedSubstitutes = Object.values(benchSlots)
-        .filter((playerId): playerId is string => Boolean(playerId))
-        .map((playerId) => roster.find((player) => player.id === playerId))
-        .filter((player): player is typeof roster[number] => Boolean(player));
-    const substitutes = assignedSubstitutes.length > 0
-        ? assignedSubstitutes
-        : roster
-            .filter((player) => !startingIds.has(player.id))
-            .sort((a, b) => b.overallRating - a.overallRating)
-            .slice(0, 5);
+    
+    const startingIds = useMemo(() => new Set(startingEleven.map(({ player }) => player.id)), [startingEleven]);
+
+    const substitutes = useMemo(() => {
+        const assignedSubstitutes = Object.values(benchSlots)
+            .filter((playerId): playerId is string => Boolean(playerId))
+            .map((playerId) => roster.find((player) => player.id === playerId))
+            .filter((player): player is typeof roster[number] => Boolean(player));
+        
+        return assignedSubstitutes.length > 0
+            ? assignedSubstitutes
+            : roster
+                .filter((player) => !startingIds.has(player.id))
+                .sort((a, b) => b.overallRating - a.overallRating)
+                .slice(0, 5);
+    }, [benchSlots, roster, startingIds]);
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#e3e2e2] pb-10 font-['Space_Grotesk'] selection:bg-[#39ff14]/30 overflow-x-hidden">

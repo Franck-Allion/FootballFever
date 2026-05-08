@@ -87,9 +87,11 @@ GPT-5 Codex
 
 ### Review Findings
 
-- [ ] [Review][Decision] Data De-normalization — The `Team.roster` property has shifted from IDs (`string[]`) to full `Player[]` objects in tests and service logic. This risks stale data if players are updated. Also, existing saves will fail validation.
-- [ ] [Review][Patch] Redundant Recalculation [src/presentation/ui/hub/HubScreen.tsx:50] — Hub calls `computeOverallRating()` on every render/formation change, which is already handled by store actions.
-- [ ] [Review][Patch] Shallow Merge Vulnerability [src/domains/shared/factories/EntityFactory.ts:56] — Player creation loses stats defaults if only a subset of stats is provided in overrides.
-- [ ] [Review][Patch] Performance Risk: High-Frequency Logging [src/domains/match/MatchWorkerClient.ts:134] — Debug logging on every 250ms worker update may impact UI performance.
-- [ ] [Review][Patch] Goalkeeper Positioning Bug [src/domains/shared/services/TeamRatingService.ts:108] — GKs assigned to outfield positions are still rated using GK formulas, and vice versa.
+- [x] [Review][Decision] Déviation des Poids de Position — L'implémentation utilise des formules complexes basées sur `algoritm.md` au lieu des pourcentages simples de la spec. Décision : Conserver les formules complexes (Option B) pour une meilleure fidélité au moteur de match.
+- [x] [Review][Patch] Mismatch Schema/Store (Roster) [src/domains/shared/schemas/EntitySchemas.ts:77]
+- [x] [Review][Patch] Fuite de Logique (HubScreen) [src/presentation/ui/hub/HubScreen.tsx:58]
+- [x] [Review][Patch] Fragilité EntityFactory (GKs) [src/domains/shared/factories/EntityFactory.ts:56]
+- [x] [Review][Patch] Risque de NaN (Rating) [src/domains/shared/services/TeamRatingService.ts:47]
+- [x] [Review][Patch] Gloutonnerie du Selectionneur [src/domains/shared/services/TeamRatingService.ts:145]
+- [x] [Review][Defer] Data De-normalization — The `Team.roster` property has shifted from IDs (`string[]`) to full `Player[]` objects in tests and service logic. This risks stale data if players are updated. Also, existing saves will fail validation. [src/domains/shared/schemas/EntitySchemas.ts:77] — deferred, pre-existing
 - [x] [Review][Defer] Pre-existing Test Failures in Domain Registry [src/domains/shared/registry/DomainRegistry.test.ts] — deferred, pre-existing (handled in 13.1 fix).

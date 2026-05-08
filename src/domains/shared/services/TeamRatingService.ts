@@ -43,12 +43,14 @@ const ATTACK_POSITIONS = new Set<RatingPosition>(['LW', 'RW', 'ST', 'CF']);
 const clampRating = (value: number): number => Math.max(0, Math.min(100, Math.round(value)));
 
 const average = (values: number[]): number => {
-    if (values.length === 0) return 0;
+    const validValues = values.filter((value) => typeof value === 'number' && !isNaN(value));
+    if (validValues.length === 0) return 0;
 
-    return clampRating(values.reduce((sum, value) => sum + value, 0) / values.length);
+    return clampRating(validValues.reduce((sum, value) => sum + value, 0) / validValues.length);
 };
 
 const isGoalkeeper = (player: Player): player is Player & { stats: GoalkeeperStats } => {
+    if (!player || typeof player !== 'object') return false;
     return player.mainPosition === 'GK';
 };
 
@@ -166,24 +168,32 @@ export class TeamRatingService {
     }
 
     public static selectStartingEleven(roster: Player[], formation: string): RatedLineupPlayer[] {
-        const available = [...roster];
+        // Filter out any potential non-object or null entries
+        const available = roster.filter(p => p && typeof p === 'object');
 
         return getFallbackSlots(formation).reduce<RatedLineupPlayer[]>((lineup, slot) => {
             if (available.length === 0) return lineup;
 
             const compatiblePlayers = available.filter((player) => canPlayPosition(player, slot));
             const candidates = compatiblePlayers.length > 0 ? compatiblePlayers : available;
-            const bestPlayer = candidates
+            
+            const ratedCandidates = candidates
                 .map((player) => ({
                     player,
                     rating: TeamRatingService.calculatePlayerPositionRating(player, slot),
                 }))
-                .sort((left, right) => right.rating - left.rating)[0];
+                .filter(c => !isNaN(c.rating))
+                .sort((left, right) => right.rating - left.rating);
+
+            const bestPlayer = ratedCandidates[0];
 
             if (!bestPlayer) return lineup;
 
             const selectedIndex = available.findIndex((player) => player.id === bestPlayer.player.id);
-            available.splice(selectedIndex, 1);
+            if (selectedIndex !== -1) {
+                available.splice(selectedIndex, 1);
+            }
+            
             lineup.push({
                 player: bestPlayer.player,
                 assignedPosition: slot,

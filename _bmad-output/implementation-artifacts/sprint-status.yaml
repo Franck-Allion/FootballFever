@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: '2026-05-04T22:42:30.000+02:00'
+last_updated: '2026-05-08T12:00:00.000+02:00'
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -84,7 +84,7 @@ development_status:
 
   epic-13: in-progress
   13-1-roster-data-integration: done
-  13-2-dynamic-team-rating-calculator: review
+  13-2-dynamic-team-rating-calculator: done
   13-3-drag-and-drop-lineup-editor: review
   epic-13-retrospective: optional
 

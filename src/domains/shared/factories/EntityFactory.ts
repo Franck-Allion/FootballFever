@@ -51,10 +51,15 @@ export class EntityFactory {
 
     public static createPlayer(overrides: DeepPartial<Player> = {}): Player {
         const playerId = overrides.id ?? `player-${EntityFactory.playerCounter}`;
-        
+        const mainPosition = overrides.mainPosition ?? basePlayer.mainPosition;
+
+        // Use appropriate base stats based on position to avoid pollution
+        const isGK = mainPosition === 'GK';
+        const templateStats = isGK ? baseGKStats : basePlayer.stats;
+
         // Deep merge stats specifically to avoid losing base stats
         const mergedStats = {
-            ...basePlayer.stats,
+            ...templateStats,
             ...(overrides.stats || {})
         };
 
@@ -66,7 +71,6 @@ export class EntityFactory {
         };
 
         EntityFactory.playerCounter += 1;
-
         return PlayerSchema.parse(mergedPlayer);
     }
 
