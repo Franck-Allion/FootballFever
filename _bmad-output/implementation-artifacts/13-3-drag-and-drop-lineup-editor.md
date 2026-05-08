@@ -1,6 +1,6 @@
 # Story 13.3: Drag & Drop Lineup Editor
 
-Status: review
+Status: done
 
 ## Story
 
@@ -222,6 +222,19 @@ GPT-5
 - Fixed `@dnd-kit/react@0.4` usage by binding the draggable source through the real `ref` API, restoring mobile pointer drag behavior.
 - Reworked the drag ghost so dragging from the squad renders only a compact `PlayerChip`, centered under the initial mouse/finger position instead of cloning the full squad tile.
 - Added mobile-only compact pitch and bench dimensions to prevent player chip overlap while preserving the existing tablet/desktop presentation.
+
+### Review Findings
+
+- [x] [Review][Patch] P1: Hardcoding UI Strings — Localisation complète effectuée (FR, EN, ES, DE) pour les libellés tactiques et les consignes.
+- [ ] [Review][Patch] P2: Nom incomplet (AC 11) — Conservé en l'état (nom de famille uniquement) selon instruction utilisateur.
+- [x] [Review][Patch] P3: Gardes Null/Stale (Lineup) — Ajout de vérifications de l'existence du joueur et des slots dans `LineupService.movePlayer`.
+- [x] [Review][Patch] P4: Bouton HubScreen inactif — Activation du clic sur la tuile Composition pour naviguer vers l'écran Tactique.
+- [x] [Review][Patch] P5: Bug Offset Touch (Mobile) — Correction de la lecture des coordonnées pointer/touch dans `TacticsScreen.tsx`.
+- [x] [Review][Patch] P6: Blocage des Swaps — Assouplissement des conditions d'échange (seuil ramené à 0.1 pour permettre de sortir un joueur d'un poste invalide).
+- [ ] [Review][Refactor] R1: Nombres Magiques — Utilisation de constantes pour les seuils d'efficacité (à faire dans une future passe de cleanup).
+- [ ] [Review][Refactor] R2: Couplage Fort Services — `LineupService` dépend de `TeamRatingService`.
+- [x] [Review][Defer] D1: Virtualisation manquante — Non critique pour le volume actuel de l'effectif.
+- [x] [Review][Defer] D2: Accessibilité Clavier — Reporté.
 
 ### File List
 

@@ -290,8 +290,10 @@ export class LineupService {
         }
 
         const destinationSlot = LineupService.getDestinationSlot(input.formation, input.destination);
-        // We still check for position-based logical "hard" invalidity (like GK vs Field)
-        if (!destinationSlot || LineupService.getPositionEfficiency(player, destinationSlot) < 0.5) {
+        const efficiency = destinationSlot ? LineupService.getPositionEfficiency(player, destinationSlot) : -1;
+        
+        // We block moves if the slot is invalid or if it's a hard illegal move (GK to Field or vice versa, efficiency <= 0.1)
+        if (!destinationSlot || efficiency <= 0.1) {
             return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
         }
 
@@ -303,10 +305,15 @@ export class LineupService {
         }
 
         if (source && occupyingPlayerId) {
-            const occupyingPlayer = getPlayer(input.roster, occupyingPlayerId)!;
-            const sourceSlot = LineupService.getDestinationSlot(input.formation, source)!;
+            const occupyingPlayer = getPlayer(input.roster, occupyingPlayerId);
+            const sourceSlot = LineupService.getDestinationSlot(input.formation, source);
 
-            if (LineupService.getPositionEfficiency(occupyingPlayer, sourceSlot) < 0.5) {
+            if (!occupyingPlayer || !sourceSlot) {
+                return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
+            }
+
+            // Block swap if the occupying player cannot play in the source slot at all (hard block)
+            if (LineupService.getPositionEfficiency(occupyingPlayer, sourceSlot) < 0.1) {
                 return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
             }
         }

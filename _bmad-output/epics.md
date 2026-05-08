@@ -208,6 +208,10 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 ### Epic 14: Gestion Humaine (Fatigue/Blessures)
 *Goal: Impact physique et moral sur le long terme.*
 
+#### Story 14.0: Audio Infrastructure & Tactical SFX
+- **As a** Tactician, **I want** satisfying audio feedback for UI interactions, **So that** the interface feels responsive.
+- **AC:** `AudioService` singleton, SFX triggered on drag/drop/swap in tactics screen.
+
 #### Story 14.1: Dynamic Fatigue & Morale System
 - **As a** Coach, **I want** players' stamina and morale to evolve during and between matches, **So that** I have to manage my squad's rotation.
 - **AC:** In-match fatigue drain and post-match recovery/morale adjustment based on results.

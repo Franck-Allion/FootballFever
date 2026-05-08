@@ -169,6 +169,7 @@ const HubScreen: React.FC = () => {
                     </button>
 
                     <button 
+                        onClick={handleOpenTactics}
                         aria-label={`Composition de l'équipe. Note globale: ${overallRating}%. Cliquez pour gérer l'effectif.`}
                         className="group min-h-48 rounded-xl border border-white/10 bg-white/[0.03] p-5 text-left backdrop-blur-2xl transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 active:scale-[0.99]"
                     >

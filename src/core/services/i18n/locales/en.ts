@@ -51,5 +51,24 @@ export const en: Translations = {
     },
     settings: {
         lang_label: 'Lang:'
+    },
+    tactics: {
+        squad: 'Squad',
+        goalkeepers: 'Goalkeepers',
+        defenders: 'Defenders',
+        midfielders: 'Midfielders',
+        attackers: 'Attackers',
+        formation_select: 'Choose Formation',
+        instruction_select: 'Choose Instruction',
+        empty: 'EMPTY',
+        tab_resume: 'Summary',
+        tab_stats: 'Stats',
+        tab_forme: 'Form',
+        back_hub: 'Back to hub',
+        instr_balanced_label: 'Balanced',
+        instr_high_press_label: 'High Press',
+        instr_low_block_label: 'Low Block',
+        instr_wing_play_label: 'Wing Play',
+        instr_direct_label: 'Direct Transition'
     }
 };

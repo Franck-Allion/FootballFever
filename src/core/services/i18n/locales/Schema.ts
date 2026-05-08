@@ -51,6 +51,25 @@ export const LocaleSchema = z.object({
     }),
     settings: z.object({
         lang_label: z.string()
+    }),
+    tactics: z.object({
+        squad: z.string(),
+        goalkeepers: z.string(),
+        defenders: z.string(),
+        midfielders: z.string(),
+        attackers: z.string(),
+        formation_select: z.string(),
+        instruction_select: z.string(),
+        empty: z.string(),
+        tab_resume: z.string(),
+        tab_stats: z.string(),
+        tab_forme: z.string(),
+        back_hub: z.string(),
+        instr_balanced_label: z.string(),
+        instr_high_press_label: z.string(),
+        instr_low_block_label: z.string(),
+        instr_wing_play_label: z.string(),
+        instr_direct_label: z.string()
     })
 });
 

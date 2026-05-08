@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { GameState } from '@core/fsm/GameState';
 import { FlowService } from '@core/fsm/FlowService';
+import { useTranslation } from '../../hooks/useTranslation';
 import { type Player } from '@domains/shared/schemas/EntitySchemas';
 import {
     type AssignmentDestination,
@@ -57,10 +58,10 @@ const haloClasses: Record<Eligibility, string> = {
 };
 
 const groupLabels: Record<PlayerGroup, string> = {
-    goalkeepers: 'Gardiens',
-    defenders: 'Defenseurs',
-    midfielders: 'Milieux',
-    attackers: 'Attaquants',
+    goalkeepers: 'tactics.goalkeepers',
+    defenders: 'tactics.defenders',
+    midfielders: 'tactics.midfielders',
+    attackers: 'tactics.attackers',
 };
 
 const statItems = [
@@ -139,7 +140,21 @@ const readPointerCoordinates = (event: unknown): { x: number; y: number } | null
         return { x: position.x, y: position.y };
     }
 
-    const nativeEvent = candidate.nativeEvent as { clientX?: unknown; clientY?: unknown } | undefined;
+    const nativeEvent = candidate.nativeEvent as { 
+        clientX?: unknown; 
+        clientY?: unknown;
+        touches?: { clientX: number; clientY: number }[];
+        changedTouches?: { clientX: number; clientY: number }[];
+    } | undefined;
+
+    if (nativeEvent?.touches && nativeEvent.touches.length > 0) {
+        return { x: nativeEvent.touches[0]!.clientX, y: nativeEvent.touches[0]!.clientY };
+    }
+
+    if (nativeEvent?.changedTouches && nativeEvent.changedTouches.length > 0) {
+        return { x: nativeEvent.changedTouches[0]!.clientX, y: nativeEvent.changedTouches[0]!.clientY };
+    }
+
     if (typeof nativeEvent?.clientX === 'number' && typeof nativeEvent.clientY === 'number') {
         return { x: nativeEvent.clientX, y: nativeEvent.clientY };
     }
@@ -393,6 +408,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
     onPlaceSelectedPlayer,
     bench = false,
 }) => {
+    const { t } = useTranslation();
     const { ref, isDropTarget } = useDroppable({
         id: `${destination.area}-${destination.slotId}`,
         accept: 'player',
@@ -419,7 +435,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
                     {slot.label}
                 </span>
                 <span className="text-[6px] font-bold text-white/20 uppercase tracking-tighter truncate ml-1">
-                    {positionDescriptions[slot.label]?.split(' ')[0] || ('id' in slot && slot.id.startsWith('bench') ? 'Remplaçant' : 'Rôle')}
+                    {positionDescriptions[slot.label]?.split(' ')[0] || ('id' in slot && slot.id.startsWith('bench') ? t('tactics.empty').toLowerCase() : 'Rôle')}
                 </span>
             </div>
 
@@ -439,7 +455,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
                 ) : (
                     <div className={`flex h-[clamp(38px,10vw,48px)] w-full flex-col items-center justify-center rounded-md border border-dashed border-white/5 bg-white/[0.01] transition-colors sm:h-[clamp(52px,9vw,64px)] ${isDropTarget ? 'bg-white/5' : ''}`}>
                         <span className="text-[7px] font-black uppercase tracking-widest text-white/5 sm:text-[9px]">
-                            VIDE
+                            {t('tactics.empty')}
                         </span>
                     </div>
                 )}
@@ -457,6 +473,7 @@ interface PlayerDetailsProps {
 }
 
 const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea = 'squad', onTabChange, onClose }) => {
+    const { t } = useTranslation();
     const [statsSubTab, setStatsSubTab] = useState<StatsSubTab>('technique');
     const { lineupSlots, benchSlots, formation } = useSquadStore();
 
@@ -552,7 +569,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea =
                             tab === item ? 'text-[#39ff14]' : 'text-white/40 hover:text-white/70'
                         }`}
                     >
-                        {item}
+                        {t(`tactics.tab_${item}`)}
                         {tab === item && (
                             <span className="absolute bottom-0 left-0 h-0.5 w-full bg-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.8)]" />
                         )}
@@ -723,6 +740,7 @@ const SquadListZone: React.FC<SquadListZoneProps> = ({
     onTabChange,
     onCloseDetails
 }) => {
+    const { t } = useTranslation();
     const { ref, isDropTarget } = useDroppable({
         id: 'squad-list-dropzone',
         accept: 'player',
@@ -737,13 +755,13 @@ const SquadListZone: React.FC<SquadListZoneProps> = ({
             } backdrop-blur-2xl`}
         >
             <div className="border-b border-white/10 px-2 py-2">
-                <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Effectif</p>
+                <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{t('tactics.squad')}</p>
             </div>
             <div className="h-[calc(100%-37px)] overflow-y-auto px-1.5 py-2 custom-scrollbar">
                 {(Object.keys(groupLabels) as PlayerGroup[]).map((group) => (
                     <section key={group} className="mb-3 last:mb-0">
                         <div className="mb-1 flex items-center justify-between gap-1">
-                            <p className="truncate text-[8px] font-black uppercase tracking-[0.15em] text-white/35">{groupLabels[group]}</p>
+                            <p className="truncate text-[8px] font-black uppercase tracking-[0.15em] text-white/35">{t(groupLabels[group])}</p>
                             <span className="text-[8px] font-black text-[#39ff14]/70">{groupedPlayers[group].length}</span>
                         </div>
                         <div className="space-y-1">
@@ -774,6 +792,7 @@ const SquadListZone: React.FC<SquadListZoneProps> = ({
 };
 
 const TacticsScreen: React.FC = () => {
+    const { t } = useTranslation();
     const {
         formation,
         lineupSlots,
@@ -927,17 +946,17 @@ const TacticsScreen: React.FC = () => {
                                 type="button"
                                 onClick={handleBack}
                                 className="flex h-10 w-10 items-center justify-center rounded border border-white/10 bg-black/45 text-white/70 transition-colors hover:border-[#39ff14]/60 hover:text-[#39ff14]"
-                                aria-label="Retour au hub"
+                                aria-label={t('tactics.back_hub')}
                             >
                                 <span className="material-symbols-outlined text-xl" aria-hidden="true">arrow_back</span>
                             </button>
                             <label className="min-w-0">
-                                <span className="sr-only">Choisir la tactique</span>
+                                <span className="sr-only">{t('tactics.formation_select')}</span>
                                 <select
                                     value={formation}
                                     onChange={(event) => setFormation(event.target.value)}
                                     className="h-10 w-full rounded border border-[#39ff14]/35 bg-black/55 px-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#39ff14] outline-none focus:border-[#39ff14]"
-                                    aria-label="Choisir la tactique"
+                                    aria-label={t('tactics.formation_select')}
                                 >
                                     {LineupService.getSupportedFormations().map((formationOption) => (
                                         <option key={formationOption} value={formationOption}>{formationOption}</option>
@@ -945,15 +964,15 @@ const TacticsScreen: React.FC = () => {
                                 </select>
                             </label>
                             <label className="min-w-0">
-                                <span className="sr-only">Choisir la consigne</span>
+                                <span className="sr-only">{t('tactics.instruction_select')}</span>
                                 <select
                                     value={gameInstruction}
                                     onChange={(event) => setGameInstruction(event.target.value as TacticalInstructionId)}
                                     className="h-10 w-full rounded border border-white/10 bg-black/55 px-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/75 outline-none focus:border-[#39ff14]"
-                                    aria-label="Choisir la consigne"
+                                    aria-label={t('tactics.instruction_select')}
                                 >
                                     {instructions.map((instruction) => (
-                                        <option key={instruction.id} value={instruction.id}>{instruction.label}</option>
+                                        <option key={instruction.id} value={instruction.id}>{t(instruction.label)}</option>
                                     ))}
                                 </select>
                             </label>

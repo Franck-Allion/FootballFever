@@ -51,14 +51,14 @@ describe('TacticsScreen', () => {
         });
 
         act(() => {
-            changeSelectByLabel(container, 'Choisir la tactique', '4-3-3');
+            changeSelectByLabel(container, 'tactics.formation_select', '4-3-3');
         });
 
         expect(useSquadStore.getState().formation).toBe('4-3-3');
         expect(container.querySelector('[data-testid="pitch-lw"]')).not.toBeNull();
 
         act(() => {
-            changeSelectByLabel(container, 'Choisir la consigne', 'high-press');
+            changeSelectByLabel(container, 'tactics.instruction_select', 'high-press');
         });
 
         expect(useSquadStore.getState().gameInstruction).toBe('high-press');
@@ -69,7 +69,7 @@ describe('TacticsScreen', () => {
             root.render(<TacticsScreen />);
         });
         act(() => {
-            changeSelectByLabel(container, 'Choisir la tactique', '4-3-3');
+            changeSelectByLabel(container, 'tactics.formation_select', '4-3-3');
         });
 
         const striker = useSquadStore.getState().roster.find((player) => player.mainPosition === 'ST');

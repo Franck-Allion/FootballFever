@@ -22,7 +22,7 @@ export interface TacticalInstruction {
 export const TACTICAL_INSTRUCTIONS: TacticalInstruction[] = [
     {
         id: 'balanced',
-        label: 'Equilibre',
+        label: 'tactics.instr_balanced_label',
         description: 'Base neutre sans surcharge tacticale.',
         modifiers: {
             pressingModifier: 1,
@@ -35,7 +35,7 @@ export const TACTICAL_INSTRUCTIONS: TacticalInstruction[] = [
     },
     {
         id: 'high-press',
-        label: 'Pressing haut',
+        label: 'tactics.instr_high_press_label',
         description: 'Recuperation agressive, fatigue et risque de contres accrus.',
         modifiers: {
             pressingModifier: 1.18,
@@ -48,7 +48,7 @@ export const TACTICAL_INSTRUCTIONS: TacticalInstruction[] = [
     },
     {
         id: 'low-block',
-        label: 'Bloc bas',
+        label: 'tactics.instr_low_block_label',
         description: 'Bloc compact, volume offensif et possession reduits.',
         modifiers: {
             pressingModifier: 0.82,
@@ -61,7 +61,7 @@ export const TACTICAL_INSTRUCTIONS: TacticalInstruction[] = [
     },
     {
         id: 'wing-play',
-        label: 'Jeu sur ailes',
+        label: 'tactics.instr_wing_play_label',
         description: 'Largeur et centres augmentes avec charge accrue sur les couloirs.',
         modifiers: {
             pressingModifier: 1,
@@ -74,7 +74,7 @@ export const TACTICAL_INSTRUCTIONS: TacticalInstruction[] = [
     },
     {
         id: 'direct-transition',
-        label: 'Transition directe',
+        label: 'tactics.instr_direct_label',
         description: 'Contres plus francs, conservation moins stable.',
         modifiers: {
             pressingModifier: 1.04,
