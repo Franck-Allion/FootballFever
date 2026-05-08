@@ -220,7 +220,7 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                 // PITCH/BENCH COMPACT DESIGN
                 <div className="flex flex-col h-full w-full">
                     {/* Header: Rating & Penalty Indicators (Top Left Corner Badge - Absolute) */}
-                    <div className={`absolute left-0 top-0 z-20 flex items-center gap-0.5 rounded-br-lg border-r border-b border-white/10 px-1 py-0.5 shadow-lg backdrop-blur-md sm:gap-1 sm:px-1.5 ${
+                    <div className={`absolute left-0 top-0 z-20 flex min-w-[18px] items-center justify-center gap-0.5 rounded-br-lg border-r border-b border-white/10 px-1 py-0.5 shadow-lg backdrop-blur-md sm:min-w-[28px] sm:gap-1 sm:px-1.5 ${
                         isPenalized ? 'bg-red-600 animate-pulse' : 'bg-black/80'
                     }`}>
                         <span className="text-[9px] font-black leading-none tracking-tighter text-white sm:text-[12px]">
@@ -579,31 +579,31 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea =
             )}
 
             {/* Content Area */}
-            <div className="max-h-[380px] overflow-y-auto p-4 custom-scrollbar">
+            <div className={`${isCentered ? 'max-h-[380px] overflow-y-auto' : ''} p-1 sm:p-4 custom-scrollbar`}>
                 {tab === 'resume' && (
-                    <div className="grid grid-cols-2 gap-3">
-                        <DetailStat label="Général" value={player.overallRating} highlight />
-                        <DetailStat label="Poste Principal" value={player.mainPosition} />
-                        <DetailStat label="Rôles Secondaires" value={secondary} wide />
-                        <DetailStat label="Âge" value={`${player.age} ans`} />
-                        <DetailStat label="Valeur Marchande" value={`${player.prestigeValue.toLocaleString('fr-FR')} €`} />
+                    <div className="grid grid-cols-2 gap-1 sm:gap-3">
+                        <DetailStat label="Gén." value={displayRating} highlight />
+                        <DetailStat label="Pos." value={player.mainPosition} />
+                        <DetailStat label="Sec." value={secondary} wide />
+                        <DetailStat label="Âge" value={`${player.age}a`} />
+                        <DetailStat label="Val." value={`${(player.prestigeValue / 1000).toFixed(0)}k`} />
                     </div>
                 )}
                 {tab === 'stats' && (
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                    <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1.5">
                         {statsGroups[statsSubTab].map(([key, value]) => (
                             <StatBar key={key} statKey={key} value={value} />
                         ))}
                     </div>
                 )}
                 {tab === 'forme' && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-1 sm:gap-3">
                         <DetailStat label="Moral" value={player.morale} progress />
-                        <DetailStat label="Condition" value={player.condition} progress />
-                        <DetailStat label="Endurance" value={player.stamina} progress />
-                        <DetailStat label="Niveau" value={player.level} />
-                        <DetailStat label="Expérience" value={player.xp} />
-                        <DetailStat label="Potentiel" value={player.potential} progress />
+                        <DetailStat label="Cond." value={player.condition} progress />
+                        <DetailStat label="End." value={player.stamina} progress />
+                        <DetailStat label="Niv." value={player.level} />
+                        <DetailStat label="XP" value={player.xp} />
+                        <DetailStat label="Pot." value={player.potential} progress />
                     </div>
                 )}
             </div>
@@ -634,31 +634,31 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea =
 const StatBar: React.FC<{ statKey: string; value: number }> = ({ statKey, value }) => {
     const labelMapping: Record<string, string> = {
         // Field
-        tackling: 'Tacle', marking: 'Marquage', positioning: 'Placement',
-        passing: 'Passe', vision: 'Vision', clearance: 'Dégagement',
-        technique: 'Technique', dribbling: 'Dribble', pace: 'Vitesse',
-        acceleration: 'Accélération', stamina: 'Endurance', power: 'Puissance',
-        duels: 'Duels', heading: 'Jeu de tête', shooting: 'Tir',
-        finishing: 'Finition', composure: 'Sang-froid',
+        tackling: 'Tacle', marking: 'Marq.', positioning: 'Plac.',
+        passing: 'Passe', vision: 'Vis.', clearance: 'Dég.',
+        technique: 'Tech.', dribbling: 'Drib.', pace: 'Vit.',
+        acceleration: 'Acc.', stamina: 'End.', power: 'Puiss.',
+        duels: 'Duels', heading: 'Tête', shooting: 'Tir',
+        finishing: 'Fin.', composure: 'S.F.',
         // GK
-        lineSaving: 'Arrêt ligne', reflexes: 'Réflexes', diving: 'Plongeon',
-        oneOnOne: 'Face à face', aerialClaim: 'Prise aérienne', cornerClaim: 'Prise corner',
-        handDistribution: 'Relance main', kicking: 'Dégagement pied', communication: 'Com.'
+        lineSaving: 'Ligne', reflexes: 'Réf.', diving: 'Plon.',
+        oneOnOne: '1v1', aerialClaim: 'Air', cornerClaim: 'Corn.',
+        handDistribution: 'Rel. M', kicking: 'Dég. P', communication: 'Com.'
     };
 
     return (
-        <div className="group flex flex-col gap-1 rounded-md bg-white/[0.03] p-2 transition-colors hover:bg-white/10">
-            <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-wider text-white/50 group-hover:text-white/80 transition-colors">
+        <div className="group flex flex-col gap-0.5 rounded bg-white/[0.02] p-1 transition-colors hover:bg-white/10 sm:gap-1 sm:p-2">
+            <div className="flex justify-between items-center px-0.5">
+                <span className="text-[7px] font-black uppercase tracking-tight text-white/40 group-hover:text-white/80 transition-colors sm:text-[10px]">
                     {labelMapping[statKey] || statKey}
                 </span>
-                <span className={`text-[11px] font-black ${
+                <span className={`text-[8px] font-black sm:text-[11px] ${
                     value > 85 ? 'text-[#39ff14]' : value > 70 ? 'text-blue-400' : value > 50 ? 'text-white' : 'text-red-400'
                 }`}>
                     {value}
                 </span>
             </div>
-            <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+            <div className="h-0.5 w-full bg-black/40 rounded-full overflow-hidden sm:h-1.5">
                 <div 
                     className={`h-full transition-all duration-700 ease-out ${
                         value > 85 ? 'bg-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.4)]' : 
