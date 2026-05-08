@@ -155,4 +155,24 @@ describe('LocalizationService', () => {
         expect(safeListener).toHaveBeenCalledWith('es');
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Listener notification failed'), expect.any(Error));
     });
+
+    it('should return key if no dots in path', () => {
+        expect(service.t('simplekey')).toBe('simplekey');
+    });
+
+    it('should handle invalid saved language by falling back to browser/default', async () => {
+        localStorage.setItem('football_fever_lang', 'invalid');
+        LocalizationService.resetInstanceForTests();
+        const newService = LocalizationService.getInstance();
+        await newService.init();
+        // Since 'invalid' is not in validLanguages, it should skip it
+        expect(newService.getLanguage()).toBe('en');
+    });
+
+    it('should skip initialization if already init', async () => {
+        // First init happened in beforeEach
+        const loadSpy = vi.spyOn(service as any, 'loadLanguage');
+        await service.init();
+        expect(loadSpy).not.toHaveBeenCalled();
+    });
 });

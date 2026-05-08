@@ -303,10 +303,10 @@ export class LineupService {
         }
 
         if (source && occupyingPlayerId) {
-            const occupyingPlayer = getPlayer(input.roster, occupyingPlayerId);
-            const sourceSlot = LineupService.getDestinationSlot(input.formation, source);
+            const occupyingPlayer = getPlayer(input.roster, occupyingPlayerId)!;
+            const sourceSlot = LineupService.getDestinationSlot(input.formation, source)!;
 
-            if (!occupyingPlayer || !sourceSlot || LineupService.getPositionEfficiency(occupyingPlayer, sourceSlot) < 0.5) {
+            if (LineupService.getPositionEfficiency(occupyingPlayer, sourceSlot) < 0.5) {
                 return { moved: false, lineupSlots: input.lineupSlots, benchSlots: input.benchSlots };
             }
         }
@@ -402,7 +402,7 @@ export class LineupService {
         const stableSlot = availableSlots.find((slot) => slot.id === oldSlot.id && slot.position !== 'GK');
         if (stableSlot) return stableSlot;
 
-        const nativeSlot = availableSlots.find((slot) => slot.position === player.mainPosition);
+        const nativeSlot = availableSlots.find((slot) => slot.position === player.mainPosition && slot.position !== 'GK');
         if (nativeSlot) return nativeSlot;
 
         const secondarySlot = availableSlots.find((slot) => player.secondaryPositions.includes(slot.position));

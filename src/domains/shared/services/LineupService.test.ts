@@ -244,4 +244,176 @@ describe('LineupService', () => {
         expect(automaticRating.startingEleven.map(({ player }) => player.id)).toContain('elite-st');
         expect(automaticRating.overallRating).toBeGreaterThan(assignedRating.overallRating);
     });
+
+    it('handles unassigning a player back to the squad pool', () => {
+        // Arrange
+        const roster = [fieldPlayer('p1', 'ST', 70)];
+        const lineupSlots = { ...LineupService.createEmptyLineup('4-3-3'), st: 'p1' };
+        const benchSlots = LineupService.createEmptyBench();
+
+        // Act
+        const result = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots,
+            benchSlots,
+            playerId: 'p1',
+            destination: { area: 'unassign', slotId: 'root' },
+        });
+
+        // Assert
+        expect(result.moved).toBe(true);
+        expect(result.lineupSlots.st).toBe(null);
+    });
+
+    it('calculates adjusted rating based on position efficiency', () => {
+        // Arrange
+        const striker = fieldPlayer('st', 'ST', 80, ['CF']);
+        const slots = LineupService.getFormationSlots('4-3-3');
+        const stSlot = slots.find(s => s.id === 'st')!;
+        const lwSlot = slots.find(s => s.id === 'lw')!;
+        const cbSlot = slots.find(s => s.id === 'cb-l')!;
+
+        // Act
+        const perfectRating = LineupService.getAdjustedRating(striker, stSlot);
+        const secondaryRating = LineupService.getAdjustedRating(striker, { ...stSlot, position: 'CF' });
+        const sameLineRating = LineupService.getAdjustedRating(striker, lwSlot);
+        const outOfPositionRating = LineupService.getAdjustedRating(striker, cbSlot);
+
+        // Assert
+        expect(perfectRating).toBeGreaterThan(70); // Natural ST
+        expect(secondaryRating).toBeLessThan(perfectRating); // Penalized by efficiency 0.85
+        expect(sameLineRating).toBeLessThan(secondaryRating); // Penalized by efficiency 0.5
+        expect(outOfPositionRating).toBeLessThan(sameLineRating); // Penalized by efficiency 0.25
+    });
+
+    it('blocks moving field players to GK slots and vice versa', () => {
+        // Arrange
+        const roster = [fieldPlayer('st', 'ST', 80), goalkeeper('gk', 80)];
+        const lineupSlots = LineupService.createEmptyLineup('4-3-3');
+        const benchSlots = LineupService.createEmptyBench();
+
+        // Act
+        const moveFieldToGk = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots,
+            benchSlots,
+            playerId: 'st',
+            destination: { area: 'pitch', slotId: 'gk' },
+        });
+        const moveGkToField = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots,
+            benchSlots,
+            playerId: 'gk',
+            destination: { area: 'pitch', slotId: 'st' },
+        });
+
+        // Assert
+        expect(moveFieldToGk.moved).toBe(false);
+        expect(moveGkToField.moved).toBe(false);
+    });
+
+    it('blocks unassigning a player who is already unassigned', () => {
+        const roster = [fieldPlayer('p1', 'ST', 70)];
+        const result = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots: LineupService.createEmptyLineup('4-3-3'),
+            benchSlots: LineupService.createEmptyBench(),
+            playerId: 'p1',
+            destination: { area: 'unassign', slotId: 'root' },
+        });
+        expect(result.moved).toBe(false);
+    });
+
+    it('blocks moving a player to their current position', () => {
+        const roster = [fieldPlayer('p1', 'ST', 70)];
+        const lineupSlots = { ...LineupService.createEmptyLineup('4-3-3'), st: 'p1' };
+        const benchSlots = LineupService.createEmptyBench();
+
+        const result = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots,
+            benchSlots,
+            playerId: 'p1',
+            destination: { area: 'pitch', slotId: 'st' },
+        });
+
+        expect(result.moved).toBe(false);
+    });
+
+    it('blocks swap if the occupying player cannot play in the source slot', () => {
+        const roster = [fieldPlayer('st', 'ST', 80), goalkeeper('gk', 80)];
+        const lineupSlots = { ...LineupService.createEmptyLineup('4-3-3'), gk: 'gk' };
+        const benchSlots = { ...LineupService.createEmptyBench(), 'bench-1': 'st' };
+
+        // Try to move ST to GK slot (this should fail swap because GK can't go to bench-1)
+        const result = LineupService.movePlayer({
+            roster,
+            formation: '4-3-3',
+            lineupSlots,
+            benchSlots,
+            playerId: 'st',
+            destination: { area: 'pitch', slotId: 'gk' },
+        });
+
+        expect(result.moved).toBe(false);
+    });
+
+    it('creates initial assignments even with empty roster or no GK', () => {
+        const resultEmpty = LineupService.createInitialAssignments([], '4-3-3');
+        expect(resultEmpty.lineupSlots.gk).toBe(null);
+
+        const rosterNoGk = [fieldPlayer('p1', 'ST', 70)];
+        const resultNoGk = LineupService.createInitialAssignments(rosterNoGk, '4-3-3');
+        expect(resultNoGk.benchSlots['bench-gk']).toBe(null);
+    });
+
+    it('returns false if moving a non-existent player', () => {
+        const result = LineupService.movePlayer({
+            roster: [],
+            formation: '4-3-3',
+            lineupSlots: LineupService.createEmptyLineup('4-3-3'),
+            benchSlots: LineupService.createEmptyBench(),
+            playerId: 'ghost',
+            destination: { area: 'pitch', slotId: 'st' },
+        });
+        expect(result.moved).toBe(false);
+    });
+
+    it('getPositionEfficiency handles GK bench slots correctly', () => {
+        const gk = goalkeeper('gk', 80);
+        const st = fieldPlayer('st', 'ST', 80);
+        const gkBench = LineupService.getBenchSlots().find(s => s.id === 'bench-gk')!;
+        const fieldBench = LineupService.getBenchSlots().find(s => s.id === 'bench-1')!;
+
+        expect(LineupService.getPositionEfficiency(gk, gkBench)).toBe(1.0);
+        expect(LineupService.getPositionEfficiency(st, gkBench)).toBe(0.1);
+        expect(LineupService.getPositionEfficiency(gk, fieldBench)).toBe(0.1);
+        expect(LineupService.getPositionEfficiency(st, fieldBench)).toBe(1.0);
+    });
+
+    it('normalizes bench by filtering invalid or duplicate players', () => {
+        const gk = goalkeeper('gk', 80);
+        const st = fieldPlayer('st', 'ST', 80);
+        const roster = [gk, st];
+        
+        // bench-gk has st, and bench-1 has st (duplicate). bench-gk accepts only GK.
+        const benchSlots = {
+            'bench-gk': 'st', 
+            'bench-1': 'st',
+            'bench-2': 'gk' // invalid for FIELD slot
+        };
+
+        // @ts-ignore - access private for testing
+        const result = LineupService.normalizeBenchAssignments(roster, benchSlots);
+        
+        expect(result['bench-gk']).toBe(null); // ST cannot be in GK bench
+        expect(result['bench-1']).toBe('st'); // Valid
+        expect(result['bench-2']).toBe(null); // GK cannot be in FIELD bench
+    });
 });

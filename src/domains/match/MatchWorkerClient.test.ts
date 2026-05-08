@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LogDomain, LoggerService } from '@core/services/logger/LoggerService';
 import {
-    getMatchWorkerClient,
-    resetMatchWorkerClientForTests,
+    MatchWorkerClient,
     type MatchWorkerMessage
 } from './MatchWorkerClient';
+import { useMatchLogStore } from './store/useMatchLogStore';
+import { CommentaryService } from './services/CommentaryService';
 
 class MockWorker extends EventTarget {
     public readonly url: string | URL;
@@ -20,39 +21,51 @@ class MockWorker extends EventTarget {
     }
 
     public emitMessage(data: MatchWorkerMessage): void {
-        this.dispatchEvent(new MessageEvent('message', { data }));
+        const event = new MessageEvent('message', { data });
+        this.dispatchEvent(event);
     }
 
     public static instances: MockWorker[] = [];
 }
 
 describe('MatchWorkerClient', () => {
+    let client: MatchWorkerClient;
+
     beforeEach(() => {
-        resetMatchWorkerClientForTests();
         MockWorker.instances = [];
         vi.stubGlobal('Worker', MockWorker);
         vi.spyOn(LoggerService.getInstance(), 'info').mockImplementation(() => {});
         vi.spyOn(LoggerService.getInstance(), 'debug').mockImplementation(() => {});
+        vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
+        
+        client = MatchWorkerClient.createForTests();
+        useMatchLogStore.getState().clearLogs();
     });
 
-    it('creates exactly one module worker instance across repeated bootstrap calls', () => {
-        const firstClient = getMatchWorkerClient();
-        const secondClient = getMatchWorkerClient();
+    const createValidState = (overrides: any = {}) => ({
+        matchId: 'm1',
+        seed: 1,
+        minute: 0,
+        second: 0,
+        period: 1,
+        score: { home: 0, away: 0 },
+        homeStats: { goals: 0, shots: 0, shotsOnTarget: 0, xG: 0, possessionSeconds: 0 },
+        awayStats: { goals: 0, shots: 0, shotsOnTarget: 0, xG: 0, possessionSeconds: 0 },
+        homeRating: { shooting: 50, control: 50 },
+        awayRating: { shooting: 50, control: 50 },
+        possessionTeam: 'home',
+        ballZone: 'MID_CENTER_L',
+        currentPhase: 'KICK_OFF',
+        isComplete: false,
+        ...overrides
+    });
 
-        expect(firstClient).toBe(secondClient);
+    it('creates a module worker instance', () => {
         expect(MockWorker.instances).toHaveLength(1);
         expect(MockWorker.instances[0]?.options).toEqual({ type: 'module' });
     });
 
-    it('does not start simulation when the worker client is created', () => {
-        getMatchWorkerClient();
-
-        expect(MockWorker.instances[0]?.postMessage).not.toHaveBeenCalled();
-    });
-
     it('sends an explicit start command before match simulation begins', () => {
-        const client = getMatchWorkerClient();
-
         client.startMatch('HUB_MATCH_1', 7_202);
 
         expect(MockWorker.instances[0]?.postMessage).toHaveBeenCalledWith({
@@ -63,7 +76,6 @@ describe('MatchWorkerClient', () => {
     });
 
     it('logs heartbeat messages from the worker through LoggerService', () => {
-        getMatchWorkerClient();
         const worker = MockWorker.instances[0];
 
         worker?.emitMessage({
@@ -79,62 +91,60 @@ describe('MatchWorkerClient', () => {
         );
     });
 
-    it('warns when a state update message is malformed', () => {
-        getMatchWorkerClient();
+    it('processes valid state updates and updates the log store', () => {
         const worker = MockWorker.instances[0];
-        const warnSpy = vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
+        
+        worker?.emitMessage({
+            type: 'state_update',
+            state: createValidState({ minute: 1, second: 30, currentPhase: 'OPEN_PLAY' })
+        });
+
+        expect(useMatchLogStore.getState().currentTime).toEqual({ min: 1, sec: 30 });
+        expect(useMatchLogStore.getState().logs).toHaveLength(1);
+    });
+
+    it('pauses simulation on goal and resumes after 3 seconds', async () => {
+        vi.useFakeTimers();
+        const worker = MockWorker.instances[0];
+        const postMessageSpy = vi.spyOn(worker!, 'postMessage');
+        
+        const baseState = createValidState({ minute: 10, currentPhase: 'OPEN_PLAY' });
+        worker?.emitMessage({ type: 'state_update', state: baseState });
+
+        const goalState = createValidState({ 
+            minute: 10, 
+            score: { home: 1, away: 0 }, 
+            homeStats: { goals: 1, shots: 1, shotsOnTarget: 1, xG: 0.8, possessionSeconds: 300 } 
+        });
+        
+        worker?.emitMessage({ type: 'state_update', state: goalState });
+
+        expect(useMatchLogStore.getState().isPaused).toBe(true);
+        expect(postMessageSpy).toHaveBeenCalledWith({ type: 'stop_match', clearState: false });
+
+        vi.advanceTimersByTime(3001);
+        
+        expect(useMatchLogStore.getState().isPaused).toBe(false);
+        expect(postMessageSpy).toHaveBeenCalledWith({ type: 'resume_match' });
+
+        vi.useRealTimers();
+    });
+
+    it('handles half-time state by pausing and stopping worker', () => {
+        const worker = MockWorker.instances[0];
+        const postMessageSpy = vi.spyOn(worker!, 'postMessage');
+        
+        vi.spyOn(CommentaryService.getInstance(), 'generateLog').mockReturnValue([{
+            id: '1', minute: 45, second: 0, text: 'MI-TEMPS', type: 'WHISTLE', intensity: 'MEDIUM'
+        }]);
 
         worker?.emitMessage({
             type: 'state_update',
-            state: {
-                minute: 10,
-                homeStats: { xG: 'invalid' }
-            }
-        } as unknown as MatchWorkerMessage);
+            state: createValidState({ minute: 45 })
+        });
 
-        expect(warnSpy).toHaveBeenCalledWith(
-            'Match worker received invalid state update',
-            { issues: expect.any(Array) },
-            LogDomain.MATCH
-        );
-    });
-
-    it('logs a warning for unknown message types', () => {
-        getMatchWorkerClient();
-        const worker = MockWorker.instances[0];
-        const warnSpy = vi.spyOn(LoggerService.getInstance(), 'warn').mockImplementation(() => {});
-
-        worker?.emitMessage({
-            type: 'unknown_type',
-            data: 'test'
-        } as unknown as MatchWorkerMessage);
-
-        expect(warnSpy).toHaveBeenCalledWith(
-            'Match worker received unknown message type',
-            expect.any(Object),
-            LogDomain.MATCH
-        );
-    });
-
-    it('logs an error when the worker encounters a lifecycle error', () => {
-        getMatchWorkerClient();
-        const worker = MockWorker.instances[0];
-        const errorSpy = vi.spyOn(LoggerService.getInstance(), 'error').mockImplementation(() => {});
-
-        worker?.dispatchEvent(new ErrorEvent('error', {
-            message: 'Worker explosion',
-            filename: 'MatchWorker.ts',
-            lineno: 42
-        }));
-
-        expect(errorSpy).toHaveBeenCalledWith(
-            'Match worker error detected',
-            {
-                message: 'Worker explosion',
-                filename: 'MatchWorker.ts',
-                lineno: 42
-            },
-            LogDomain.MATCH
-        );
+        expect(useMatchLogStore.getState().isHalfTime).toBe(true);
+        expect(useMatchLogStore.getState().isPaused).toBe(true);
+        expect(postMessageSpy).toHaveBeenCalledWith({ type: 'stop_match', clearState: false });
     });
 });

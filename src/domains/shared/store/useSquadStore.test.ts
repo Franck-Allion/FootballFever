@@ -180,4 +180,17 @@ describe('useSquadStore team rating integration', () => {
         expect(Object.values(state.lineupSlots)).toContain('manual-st');
         expect(Object.values(state.lineupSlots)).not.toContain('auto-st');
     });
+
+    it('updates team name, division, and game instructions', () => {
+        const store = useSquadStore.getState();
+
+        store.setTeamName('New Team');
+        expect(useSquadStore.getState().teamName).toBe('New Team');
+
+        store.setDivision(1);
+        expect(useSquadStore.getState().division).toBe(1);
+
+        store.setGameInstruction('ultra_defensive');
+        expect(useSquadStore.getState().gameInstruction).toBe('ultra_defensive');
+    });
 });

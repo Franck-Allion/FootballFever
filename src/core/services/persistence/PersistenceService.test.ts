@@ -117,4 +117,10 @@ describe('PersistenceService', () => {
 
         expect(consoleSpy).toHaveBeenCalledWith('PersistenceService: Critical failure during recovery', expect.any(Error));
     });
+
+    it('should return BOOT if raw state is invalid', () => {
+        // @ts-ignore - access private
+        const result = service.toGameStateOrDefault('INVALID_STATE');
+        expect(result).toBe(GameState.BOOT);
+    });
 });
