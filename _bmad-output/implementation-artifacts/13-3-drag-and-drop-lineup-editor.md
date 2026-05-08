@@ -201,6 +201,8 @@ GPT-5
 - 2026-05-04: Ran targeted Vitest suite for `LineupService`, `useSquadStore`, `TeamRatingService`, and `TacticsScreen`.
 - 2026-05-04: Ran `npm run build` successfully after UI/FSM integration.
 - 2026-05-04: Ran full `npm test -- --run` successfully: 21 files, 120 tests passing.
+- 2026-05-07: Ran `npm run build` successfully after mobile DnD and responsive chip fixes.
+- 2026-05-07: Ran `npx vitest run src/presentation/ui/tactics/TacticsScreen.test.tsx` successfully.
 
 ### Completion Notes List
 
@@ -217,6 +219,9 @@ GPT-5
 - Redesigned the tactics screen for mobile portrait and landscape with top formation/instruction selects, left grouped squad list, right pitch/bench surface, compact player chips, and click-to-open player detail tabs.
 - Fixed mobile drag-and-drop affordance by separating the stats click from a dedicated drag handle, declaring player/drop target types, adding a chip ghost overlay, and keeping tap-to-place as a fallback for selected players.
 - Updated player chips so the stats action is a dedicated info button and every other area of the chip starts drag-and-drop.
+- Fixed `@dnd-kit/react@0.4` usage by binding the draggable source through the real `ref` API, restoring mobile pointer drag behavior.
+- Reworked the drag ghost so dragging from the squad renders only a compact `PlayerChip`, centered under the initial mouse/finger position instead of cloning the full squad tile.
+- Added mobile-only compact pitch and bench dimensions to prevent player chip overlap while preserving the existing tablet/desktop presentation.
 
 ### File List
 
@@ -243,3 +248,4 @@ GPT-5
 - 2026-05-05: Reworked tactics UI for mobile-first use: top selectors, grouped squad list, compact pitch tokens, halo status feedback, and tabbed player details.
 - 2026-05-05: Fixed squad-to-pitch placement with a dedicated drag handle, drag ghost overlay, explicit drop acceptance, and selected-player tap placement for mobile reliability.
 - 2026-05-05: Swapped the interaction model: info button opens stats, the rest of the player chip is the drag source.
+- 2026-05-07: Fixed mobile drag source binding, centered chip-only ghost overlay, and mobile-only pitch/bench chip sizing to remove overlaps.

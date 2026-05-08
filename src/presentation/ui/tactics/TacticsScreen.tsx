@@ -121,6 +121,32 @@ const readEntityId = (entry: unknown): string | null => {
     return typeof id === 'string' ? id : null;
 };
 
+const readEntityElement = (entry: unknown): Element | null => {
+    if (typeof Element === 'undefined') return null;
+
+    const candidate = entry as { element?: unknown } | undefined;
+    return candidate?.element instanceof Element ? candidate.element : null;
+};
+
+const readPointerCoordinates = (event: unknown): { x: number; y: number } | null => {
+    const candidate = event as {
+        nativeEvent?: unknown;
+        operation?: { position?: { current?: { x?: unknown; y?: unknown } } };
+    };
+    const position = candidate.operation?.position?.current;
+
+    if (typeof position?.x === 'number' && typeof position.y === 'number') {
+        return { x: position.x, y: position.y };
+    }
+
+    const nativeEvent = candidate.nativeEvent as { clientX?: unknown; clientY?: unknown } | undefined;
+    if (typeof nativeEvent?.clientX === 'number' && typeof nativeEvent.clientY === 'number') {
+        return { x: nativeEvent.clientX, y: nativeEvent.clientY };
+    }
+
+    return null;
+};
+
 const parseDestinationId = (id: string | null): AssignmentDestination | undefined => {
     if (!id) return undefined;
 
@@ -176,7 +202,7 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
         <div
             className={`group relative flex min-w-0 touch-none select-none overflow-hidden transition-all duration-300 ${
                 compact
-                    ? 'h-[clamp(52px,9vw,64px)] w-[clamp(74px,12vw,92px)] flex-col rounded-md border-b-2'
+                    ? 'h-[clamp(38px,10vw,48px)] w-[clamp(42px,12vw,50px)] flex-col rounded-md border-b-2 sm:h-[clamp(52px,9vw,64px)] sm:w-[clamp(74px,12vw,92px)]'
                     : 'h-12 w-full items-center gap-2 rounded-lg border px-2'
             } ${rarityBgClasses[player.rarity] ?? rarityBgClasses.Common} ${
                 rarityBorderClasses[player.rarity] ?? rarityBorderClasses.Common
@@ -184,7 +210,7 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                 selected ? 'ring-2 ring-[#39ff14] z-20 shadow-[0_0_20px_rgba(57,255,20,0.3)]' : ''
             } ${
                 isPenalized ? 'ring-2 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.4)] z-10' : ''
-            } ${isDragging ? 'opacity-40 scale-95' : 'hover:brightness-110 active:scale-95'}`}
+            } ${isDragging ? 'opacity-0 scale-95' : 'hover:brightness-110 active:scale-95'}`}
         >
             {/* Glossy Overlay */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-50" />
@@ -194,10 +220,10 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                 // PITCH/BENCH COMPACT DESIGN
                 <div className="flex flex-col h-full w-full">
                     {/* Header: Rating & Penalty Indicators (Top Left Corner Badge - Absolute) */}
-                    <div className={`absolute left-0 top-0 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-br-lg border-r border-b border-white/10 backdrop-blur-md shadow-lg ${
+                    <div className={`absolute left-0 top-0 z-20 flex items-center gap-0.5 rounded-br-lg border-r border-b border-white/10 px-1 py-0.5 shadow-lg backdrop-blur-md sm:gap-1 sm:px-1.5 ${
                         isPenalized ? 'bg-red-600 animate-pulse' : 'bg-black/80'
                     }`}>
-                        <span className="text-[11px] sm:text-[12px] font-black leading-none tracking-tighter text-white">
+                        <span className="text-[9px] font-black leading-none tracking-tighter text-white sm:text-[12px]">
                             {displayRating}
                         </span>
                         {isPenalized && (
@@ -212,16 +238,17 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                         <img 
                             src={player.portraitUrl || '/assets/portraits/default.png'} 
                             alt="" 
-                            className="h-[110%] w-auto object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)] group-hover:scale-110 transition-transform duration-500" 
+                            className="h-[110%] w-auto object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-110"
+                            draggable={false}
                         />
                     </div>
 
                     {/* Footer: Name & Natural Position Badge */}
-                    <div className="bg-black/60 px-1 py-1 backdrop-blur-md flex items-center gap-1">
-                        <span className="block truncate flex-1 text-center font-black uppercase text-[9px] sm:text-[10px] leading-none tracking-tight text-white drop-shadow-md">
+                    <div className="flex items-center gap-0.5 bg-black/60 px-0.5 py-0.5 backdrop-blur-md sm:gap-1 sm:px-1 sm:py-1">
+                        <span className="block flex-1 truncate text-center text-[7px] font-black uppercase leading-none tracking-tight text-white drop-shadow-md sm:text-[10px]">
                             {displayName}
                         </span>
-                        <span className="shrink-0 text-[7px] font-black leading-none text-white/70 bg-white/10 px-1 py-0.5 rounded-sm border border-white/5 uppercase">
+                        <span className="shrink-0 rounded-sm border border-white/5 bg-white/10 px-0.5 py-0.5 text-[6px] font-black uppercase leading-none text-white/70 sm:px-1 sm:text-[7px]">
                             {player.mainPosition}
                         </span>
                     </div>
@@ -233,7 +260,8 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                         <img 
                             src={player.portraitUrl || '/assets/portraits/default.png'} 
                             alt="" 
-                            className="h-full w-full object-cover" 
+                            className="h-full w-full object-cover"
+                            draggable={false}
                         />
                         <div className="absolute bottom-0 right-0 bg-black/80 px-1 text-[8px] font-black leading-tight text-white">
                             {player.overallRating}
@@ -268,7 +296,7 @@ const PlayerChip: React.FC<PlayerChipProps> = ({
                     event.stopPropagation();
                     onSelect?.(player.id);
                 }}
-                className={`absolute right-1 bottom-1 z-10 flex items-center justify-center rounded-full bg-black/60 text-white/40 hover:bg-[#39ff14] hover:text-black transition-all duration-200 ${
+                className={`absolute bottom-1 right-1 z-10 flex items-center justify-center rounded-full bg-black/60 text-white/40 transition-all duration-200 hover:bg-[#39ff14] hover:text-black ${
                     compact ? 'h-4 w-4 opacity-0 group-hover:opacity-100' : 'h-6 w-6'
                 }`}
                 aria-label={`Afficher les statistiques de ${player.name}`}
@@ -297,19 +325,14 @@ const DraggablePlayer: React.FC<DraggablePlayerProps & { slot?: FormationSlot | 
     slot,
     onSelect 
 }) => {
-    const { 
-        ref, 
-        isDragging,
-        listeners,
-        attributes
-    } = useDraggable({
+    const { ref, isDragging } = useDraggable({
         id: `player-${player.id}`,
         type: 'player',
         data: { playerId: player.id },
     } as never);
     
     return (
-        <div ref={ref} {...listeners} {...attributes}>
+        <div ref={ref} className="touch-none select-none">
             <PlayerChip 
                 player={player}
                 selected={selected}
@@ -402,7 +425,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
 
             {/* 2. Player Card / Empty Slot Container */}
             <div className={`relative flex items-center justify-center rounded-b-lg border-x border-b p-0.5 transition-all ${feedbackClass} ${
-                bench ? 'h-full min-h-14' : 'min-h-[clamp(56px,10vw,70px)]'
+                bench ? 'h-full min-h-11 sm:min-h-14' : 'min-h-[clamp(42px,11vw,54px)] sm:min-h-[clamp(56px,10vw,70px)]'
             }`}>
                 {player ? (
                     <DraggablePlayer
@@ -414,8 +437,8 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({
                         onSelect={onSelectPlayer}
                     />
                 ) : (
-                    <div className={`flex h-[clamp(52px,9vw,64px)] w-full flex-col items-center justify-center rounded-md border border-dashed border-white/5 bg-white/[0.01] transition-colors ${isDropTarget ? 'bg-white/5' : ''}`}>
-                        <span className="text-[9px] font-black text-white/5 uppercase tracking-widest">
+                    <div className={`flex h-[clamp(38px,10vw,48px)] w-full flex-col items-center justify-center rounded-md border border-dashed border-white/5 bg-white/[0.01] transition-colors sm:h-[clamp(52px,9vw,64px)] ${isDropTarget ? 'bg-white/5' : ''}`}>
+                        <span className="text-[7px] font-black uppercase tracking-widest text-white/5 sm:text-[9px]">
                             VIDE
                         </span>
                     </div>
@@ -770,6 +793,7 @@ const TacticsScreen: React.FC = () => {
     const movePlayerToSlot = useSquadStore((s) => s.movePlayerToSlot);
 
     const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
+    const [dragGhostOffset, setDragGhostOffset] = useState<{ x: number; y: number } | null>(null);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [selectedSourceArea, setSelectedSourceArea] = useState<'squad' | 'pitch' | 'bench' | null>(null);
     const [detailTab, setDetailTab] = useState<DetailTab>('resume');
@@ -853,8 +877,19 @@ const TacticsScreen: React.FC = () => {
         const source = readEventSource(event);
         const data = readDragData(source);
         const playerId = typeof data.playerId === 'string' ? data.playerId : null;
+        const sourceElement = readEntityElement(source);
+        const pointer = readPointerCoordinates(event);
 
         setDraggedPlayerId(playerId);
+        if (sourceElement && pointer) {
+            const rect = sourceElement.getBoundingClientRect();
+            setDragGhostOffset({
+                x: Math.min(Math.max(pointer.x - rect.left, 0), rect.width),
+                y: Math.min(Math.max(pointer.y - rect.top, 0), rect.height),
+            });
+        } else {
+            setDragGhostOffset(null);
+        }
     };
 
     const handleDragEnd = (event: unknown) => {
@@ -874,10 +909,12 @@ const TacticsScreen: React.FC = () => {
         }
 
         setDraggedPlayerId(null);
+        setDragGhostOffset(null);
     };
 
     const handleDragCancel = () => {
         setDraggedPlayerId(null);
+        setDragGhostOffset(null);
     };
 
     return (
@@ -931,7 +968,7 @@ const TacticsScreen: React.FC = () => {
                         </div>
                     </header>
 
-                    <section className="grid min-h-0 flex-1 grid-cols-[minmax(108px,34vw)_minmax(0,1fr)] gap-2 sm:grid-cols-[minmax(190px,25vw)_minmax(0,1fr)] sm:gap-3">
+                    <section className="grid min-h-0 flex-1 grid-cols-[minmax(104px,32vw)_minmax(0,1fr)] gap-2 sm:grid-cols-[minmax(190px,25vw)_minmax(0,1fr)] sm:gap-3">
                         <SquadListZone 
                             groupedPlayers={groupedPlayers}
                             groupLabels={groupLabels}
@@ -954,7 +991,7 @@ const TacticsScreen: React.FC = () => {
                                 {formationSlots.map((slot) => (
                                     <div
                                         key={slot.id}
-                                        className="absolute w-[clamp(74px,12vw,92px)] -translate-x-1/2 -translate-y-1/2"
+                                        className="absolute w-[clamp(42px,12vw,50px)] -translate-x-1/2 -translate-y-1/2 sm:w-[clamp(74px,12vw,92px)]"
                                         style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                                     >
                                         <DroppableSlot
@@ -970,7 +1007,7 @@ const TacticsScreen: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div className="grid h-[clamp(64px,15dvh,96px)] shrink-0 grid-cols-5 gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-2xl">
+                            <div className="grid h-[clamp(54px,13dvh,78px)] shrink-0 grid-cols-5 gap-0.5 rounded-xl border border-white/10 bg-white/[0.03] p-0.5 backdrop-blur-2xl sm:h-[clamp(64px,15dvh,96px)] sm:gap-1 sm:p-1">
                                 {benchDefinitions.map((slot) => (
                                     <DroppableSlot
                                         key={slot.id}
@@ -999,9 +1036,12 @@ const TacticsScreen: React.FC = () => {
                     />
                 )}
 
-                <DragOverlay dropAnimation={null}>
+                <DragOverlay dropAnimation={null} className="pointer-events-none overflow-visible">
                     {draggedPlayer ? (
-                        <div className="z-50 scale-105 opacity-80 shadow-2xl shadow-black/80">
+                        <div
+                            className="pointer-events-none absolute z-50 -translate-x-1/2 -translate-y-1/2 scale-105 opacity-95 shadow-2xl shadow-black/80"
+                            style={dragGhostOffset ? { left: dragGhostOffset.x, top: dragGhostOffset.y } : { left: '50%', top: '50%' }}
+                        >
                             <PlayerChip player={draggedPlayer} compact />
                         </div>
                     ) : null}
