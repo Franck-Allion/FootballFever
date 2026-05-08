@@ -25,7 +25,7 @@ export class PlayerFactory {
         
         const candidates = PLAYER_CATALOG.filter(p => 
             p.mainPosition === position && 
-            p.division <= division && 
+            p.division === division && 
             !excludedIds.includes(p.catalogId)
         );
 
