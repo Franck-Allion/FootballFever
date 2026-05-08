@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: '2026-05-08T13:15:00.000+02:00'
+last_updated: '2026-05-08T14:30:00.000+02:00'
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -47,6 +47,7 @@ development_status:
   epic-02-retrospective: optional
   epic-03: done
   3-1-finite-state-machine-controller: done
+  3-2-main-menu-save-management: ready-for-dev
   epic-03-retrospective: optional
   epic-04: done
   4-1-test-coverage-ci-guardrails: done
@@ -88,8 +89,9 @@ development_status:
   13-3-drag-and-drop-lineup-editor: done
   epic-13-retrospective: done
 
-  epic-14: backlog
+  epic-14: in-progress
   14-0-audio-infrastructure-sfx: ready-for-dev
+  14-1-dynamic-fatigue-morale-system: done
   epic-14-retrospective: optional
   epic-15: backlog
   epic-15-retrospective: optional
@@ -106,6 +108,7 @@ development_status:
   epic-21: backlog
   epic-21-retrospective: optional
   epic-22: backlog
+  22-0-visual-juice-infrastructure: ready-for-dev
   epic-22-retrospective: optional
   epic-23: done
   23-1-tauri-desktop-build: done

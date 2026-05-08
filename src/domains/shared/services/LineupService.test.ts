@@ -416,4 +416,35 @@ describe('LineupService', () => {
         expect(result['bench-1']).toBe('st'); // Valid
         expect(result['bench-2']).toBe(null); // GK cannot be in FIELD bench
     });
+
+    it('returns moved: false if occupying player or source slot is missing during swap', () => {
+        const roster = [fieldPlayer('p1', 'ST', 70), fieldPlayer('p2', 'ST', 75)];
+        const lineupSlots = { ...LineupService.createEmptyLineup('4-4-2 DIAMOND'), st: 'p2' };
+        const benchSlots = { ...LineupService.createEmptyBench(), 'bench-1': 'p1' };
+
+        // Test with invalid occupying player ID (not in roster)
+        const resultInvalidPlayer = LineupService.movePlayer({
+            playerId: 'p1',
+            destination: { area: 'pitch', slotId: 'st' },
+            roster: [fieldPlayer('p1', 'ST', 70)], // p2 missing
+            formation: '4-4-2 DIAMOND',
+            lineupSlots,
+            benchSlots
+        });
+
+        expect(resultInvalidPlayer.moved).toBe(false);
+
+        // Test with unassign destination
+        const resultUnassign = LineupService.movePlayer({
+            playerId: 'p2',
+            destination: { area: 'unassign', slotId: 'root' },
+            roster,
+            formation: '4-4-2 DIAMOND',
+            lineupSlots,
+            benchSlots
+        });
+
+        expect(resultUnassign.moved).toBe(true);
+        expect(resultUnassign.lineupSlots.st).toBe(null);
+    });
 });

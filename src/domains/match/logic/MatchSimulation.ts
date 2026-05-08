@@ -27,20 +27,40 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+const FATIGUE_CONFIG = {
+  baseDrainPerTick: (0.05 / 60) * 5, // Exactly 0.05% per minute (AC 1)
+  tacticalModifiers: {
+    'balanced': 1.0,
+    'high-press': 1.18,      // AC 1: 1.18x
+    'low-block': 0.92,       // AC 1: 0.92x
+    'wing-play': 1.10,       // AC 1: 1.1x
+    'direct-transition': 1.08 // AC 1: 1.08x
+  } as Record<string, number>,
+  staminaImpactOnSkill: 0.15, // 100% stamina = 1.0x, 0% stamina = 0.85x
+} as const;
+
 /**
  * Calculates the Expected Goals (xG) for a shot from a specific zone.
  */
-export function calculateXG(zoneId: MatchZoneId, shootingSkill: number = 50): number {
+export function calculateXG(zoneId: MatchZoneId, rating: TeamRating): number {
+  const shootingSkill = rating.shooting;
+  const stamina = Number.isFinite(rating.stamina) ? rating.stamina : 100;
+  
   const safeShootingSkill = Number.isFinite(shootingSkill)
     ? clamp(shootingSkill, 0, 100)
     : SHOT_RESOLUTION_CONFIG.neutralShootingSkill;
+  
   const zone = getMatchZone(zoneId);
   const distanceThreat = 1 - zone.coefficients.distanceToGoal;
   const zoneThreat =
     zone.coefficients.shootValue * SHOT_RESOLUTION_CONFIG.xgShootValueWeight +
     distanceThreat * SHOT_RESOLUTION_CONFIG.xgDistanceWeight;
+  
+  // Apply fatigue malus: 100% stamina = 1.0, 50% stamina = 0.925 (with 0.15 impact)
+  const fatigueModifier = 1 - (1 - stamina / 100) * FATIGUE_CONFIG.staminaImpactOnSkill;
+  
   const skillDelta = (safeShootingSkill - SHOT_RESOLUTION_CONFIG.neutralShootingSkill) / 100;
-  const skillMultiplier = 1 + skillDelta * SHOT_RESOLUTION_CONFIG.skillImpact;
+  const skillMultiplier = (1 + skillDelta * SHOT_RESOLUTION_CONFIG.skillImpact) * fatigueModifier;
   
   return clamp(
     zoneThreat * SHOT_RESOLUTION_CONFIG.xgBaseScale * skillMultiplier,
@@ -62,13 +82,11 @@ export function resolveShotForTests(state: MatchState, rng: () => number): Match
     awayRating: { ...state.awayRating },
   };
   const attackingTeam = state.possessionTeam;
-  const shootingSkill = attackingTeam === 'home'
-    ? state.homeRating.shooting
-    : state.awayRating.shooting;
+  const rating = attackingTeam === 'home' ? state.homeRating : state.awayRating;
   const stats = attackingTeam === 'home' ? nextState.homeStats : nextState.awayStats;
   
-  // 1. Calculate xG
-  const xG = calculateXG(state.ballZone, shootingSkill);
+  // 1. Calculate xG with stamina impact
+  const xG = calculateXG(state.ballZone, rating);
   stats.shots += 1;
   stats.xG += xG;
 
@@ -104,6 +122,22 @@ export function resolveShotForTests(state: MatchState, rng: () => number): Match
   return nextState;
 }
 
+function updateFatigue(state: MatchState): void {
+  const homeModifier = FATIGUE_CONFIG.tacticalModifiers[state.homeTactic] ?? 1.0;
+  const awayModifier = FATIGUE_CONFIG.tacticalModifiers[state.awayTactic] ?? 1.0;
+
+  state.homeRating.stamina = clamp(
+    state.homeRating.stamina - FATIGUE_CONFIG.baseDrainPerTick * homeModifier,
+    0,
+    100
+  );
+  state.awayRating.stamina = clamp(
+    state.awayRating.stamina - FATIGUE_CONFIG.baseDrainPerTick * awayModifier,
+    0,
+    100
+  );
+}
+
 /**
  * Advances the match state by one tick (e.g. 5 seconds).
  * Pure function, deterministic based on state.seed and current time.
@@ -118,13 +152,18 @@ export function advanceMatchState(state: MatchState): MatchState {
     ...activeState, 
     score: { ...activeState.score },
     homeStats: { ...activeState.homeStats },
-    awayStats: { ...activeState.awayStats }
+    awayStats: { ...activeState.awayStats },
+    homeRating: { ...activeState.homeRating },
+    awayRating: { ...activeState.awayRating },
   };
 
   // 1. Advance Clock
   const totalSeconds = activeState.minute * 60 + activeState.second + SHOT_RESOLUTION_CONFIG.tickSeconds;
   nextState.minute = Math.floor(totalSeconds / 60);
   nextState.second = totalSeconds % 60;
+
+  // 1.5 Update Fatigue
+  updateFatigue(nextState);
 
   // Possession tracking
   if (activeState.possessionTeam === 'home') {
@@ -158,13 +197,16 @@ export function advanceMatchState(state: MatchState): MatchState {
   // 4. Movement Logic (if no shot)
   const moveRoll = rng();
 
-  // Dynamic turnover based on control difference
+  // Dynamic turnover based on control difference (now factoring in stamina)
+  const homeEffectiveControl = nextState.homeRating.control * (1 - (1 - nextState.homeRating.stamina / 100) * FATIGUE_CONFIG.staminaImpactOnSkill);
+  const awayEffectiveControl = nextState.awayRating.control * (1 - (1 - nextState.awayRating.stamina / 100) * FATIGUE_CONFIG.staminaImpactOnSkill);
+
   const attackingControl = activeState.possessionTeam === 'home' 
-    ? activeState.homeRating.control 
-    : activeState.awayRating.control;
+    ? homeEffectiveControl 
+    : awayEffectiveControl;
   const defendingControl = activeState.possessionTeam === 'home' 
-    ? activeState.awayRating.control 
-    : activeState.homeRating.control;
+    ? awayEffectiveControl 
+    : homeEffectiveControl;
   
   const controlDelta = attackingControl - defendingControl;
   const turnoverShift = (controlDelta / 100) * SHOT_RESOLUTION_CONFIG.maxTurnoverShift;

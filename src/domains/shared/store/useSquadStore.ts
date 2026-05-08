@@ -4,6 +4,7 @@ import { Player } from '../schemas/EntitySchemas';
 import { type AssignmentDestination, type AssignmentMap, LineupService } from '../services/LineupService';
 import { PlayerFactory } from '../services/PlayerFactory';
 import { type TacticalInstructionId } from '../services/TacticalInstructionService';
+import { HumanManagementService, type MatchOutcome } from '../services/HumanManagementService';
 
 export interface TimelineNode {
     id: string;
@@ -57,6 +58,7 @@ interface SquadState {
     setOverallRating: (rating: number) => void;
     computeOverallRating: () => void;
     initializeRoster: (force?: boolean) => void;
+    finalizeMatchDay: (result: { homeScore: number; awayScore: number }, homeFinalStamina: number, seed: number) => void;
 }
 
 const DEFAULT_FORMATION = '4-4-2 DIAMOND';
@@ -186,6 +188,38 @@ export const useSquadStore = create<SquadState>()(
                     ...applyRating(roster, state.formation, assignments.lineupSlots),
                 };
             }),
+            finalizeMatchDay: (result, homeFinalStamina, seed) => set((state) => {
+                const outcome: MatchOutcome = result.homeScore > result.awayScore 
+                    ? 'win' 
+                    : result.homeScore < result.awayScore 
+                        ? 'loss' 
+                        : 'draw';
+
+                const starters = new Set(Object.values(state.lineupSlots).filter(Boolean) as string[]);
+
+                const evolvedRoster = state.roster.map((player) => {
+                    const playedInMatch = starters.has(player.id);
+
+                    if (playedInMatch) {
+                        return HumanManagementService.evolvePlayerAfterMatch(player, {
+                            outcome,
+                            playedInMatch: true,
+                            finalStamina: homeFinalStamina,
+                            seed
+                        });
+                    } else {
+                        // Bench or squad players recover
+                        return HumanManagementService.applyRestRecovery(player);
+                    }
+                });
+
+                return {
+                    roster: evolvedRoster,
+                    streak: [...state.streak.slice(1), outcome === 'win' ? 'W' : outcome === 'loss' ? 'L' : 'D'],
+                    ...applyRating(evolvedRoster, state.formation, state.lineupSlots),
+                };
+            }),
+
         }),
         {
             name: 'squad-storage',

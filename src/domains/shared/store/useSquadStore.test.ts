@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { EntityFactory } from '../factories/EntityFactory';
@@ -192,5 +193,100 @@ describe('useSquadStore team rating integration', () => {
 
         store.setGameInstruction('ultra_defensive');
         expect(useSquadStore.getState().gameInstruction).toBe('ultra_defensive');
+    });
+
+    it('skips initialization if not forced and data exists', () => {
+        const { initializeRoster, initializeLineup } = useSquadStore.getState();
+        
+        // 1. Initialize with force
+        act(() => {
+            initializeRoster(true);
+        });
+        const initialRoster = useSquadStore.getState().roster;
+        const initialLineup = useSquadStore.getState().lineupSlots;
+        
+        // 2. Call again without force
+        act(() => {
+            initializeRoster(false);
+            initializeLineup(false);
+        });
+        
+        expect(useSquadStore.getState().roster).toBe(initialRoster);
+        expect(useSquadStore.getState().lineupSlots).toBe(initialLineup);
+    });
+
+    it('applies match outcomes to player stats in finalizeMatchDay (Win/Loss/Draw)', () => {
+        const { initializeRoster, finalizeMatchDay, movePlayerToSlot } = useSquadStore.getState();
+        initializeRoster(true);
+
+        const player = useSquadStore.getState().roster[0];
+        act(() => {
+            movePlayerToSlot(player.id, { area: 'pitch', slotId: 'gk' });
+        });
+
+        // Test Draw
+        act(() => {
+            finalizeMatchDay({ homeScore: 1, awayScore: 1 }, 95, 123);
+        });
+        expect(useSquadStore.getState().streak[useSquadStore.getState().streak.length - 1]).toBe('D');
+
+        // Test Loss
+        act(() => {
+            finalizeMatchDay({ homeScore: 0, awayScore: 2 }, 90, 123);
+        });
+        expect(useSquadStore.getState().streak[useSquadStore.getState().streak.length - 1]).toBe('L');
+    });
+
+    it('applies match outcomes to player stats in finalizeMatchDay', () => {
+        const { initializeRoster, finalizeMatchDay, movePlayerToSlot } = useSquadStore.getState();
+        initializeRoster(true); // Generates standard roster with player-1, player-2...
+
+        const initialPlayer = useSquadStore.getState().roster[0];
+        const initialMorale = initialPlayer.morale;
+        
+        // Ensure player is assigned to a slot so they are treated as a starter
+        act(() => {
+            movePlayerToSlot(initialPlayer.id, { area: 'pitch', slotId: 'gk' });
+        });
+
+        // Act
+        act(() => {
+            // homeScore > awayScore = WIN, homeFinalStamina = 90, seed = 123
+            finalizeMatchDay({ homeScore: 2, awayScore: 0 }, 90, 123);
+        });
+
+        const evolvedPlayer = useSquadStore.getState().roster[0];
+        
+        // Morale change should be between 5 and 10 for a win
+        expect(evolvedPlayer.morale).toBeGreaterThanOrEqual(initialMorale + 5);
+        expect(evolvedPlayer.morale).toBeLessThanOrEqual(initialMorale + 10);
+        
+        // Fatigue should be applied since player was a starter
+        expect(evolvedPlayer.condition).toBeLessThan(100);
+    });
+
+    it('merges persisted state correctly including composites', () => {
+        // Access the persist options where merge is defined
+        const persistOptions = (useSquadStore as any).persist.getOptions();
+        const merge = persistOptions.merge;
+        
+        if (typeof merge !== 'function') return;
+
+        const current = useSquadStore.getState();
+        const saved = {
+            teamName: 'Persisted Team',
+            composites: { attack: 80, defense: 70 }
+        };
+        
+        const merged = merge(saved, current);
+        
+        expect(merged.teamName).toBe('Persisted Team');
+        expect(merged.composites.attack).toBe(80);
+        expect(merged.composites.defense).toBe(70);
+        expect(merged.formation).toBe(current.formation); // Kept from current
+
+        // Test with null saved
+        const mergedNull = merge(null, current);
+        expect(mergedNull).toBe(current);
     });
 });

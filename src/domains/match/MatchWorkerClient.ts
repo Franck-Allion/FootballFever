@@ -122,11 +122,12 @@ export class MatchWorkerClient {
                     }
                 }
 
-                // Throttled UI updates for clock/score
+                // Throttled UI updates for clock/score/stamina
                 const now = Date.now();
                 if (now - this.lastUpdateTimestamp >= this.THROTTLE_MS || logs.length > 0 || state.isComplete) {
                     logStore.setCurrentTime(state.minute, state.second);
                     logStore.setScores(state.score.home, state.score.away);
+                    logStore.setFinalStamina(state.homeRating.stamina, state.awayRating.stamina);
                     this.lastUpdateTimestamp = now;
                 }
 

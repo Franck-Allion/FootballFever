@@ -40,10 +40,12 @@ const MatchSimulationScreen: React.FC = () => {
         awayScore, 
         isPaused, 
         isHalfTime, 
-        isFinished 
+        isFinished,
+        finalStamina,
+        seed
     } = useMatchLogStore();
     
-    const { teamName } = useSquadStore();
+    const { teamName, finalizeMatchDay } = useSquadStore();
     const listRef = useListRef(null);
     const { t } = useTranslation();
 
@@ -59,6 +61,9 @@ const MatchSimulationScreen: React.FC = () => {
     };
 
     const handleExit = () => {
+        if (isFinished && seed !== null) {
+            finalizeMatchDay({ homeScore, awayScore }, finalStamina.home, seed);
+        }
         FlowService.getInstance().navigateTo(GameState.HUB);
     };
 

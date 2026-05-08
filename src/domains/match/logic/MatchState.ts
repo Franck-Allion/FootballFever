@@ -15,12 +15,12 @@ export const MatchStatsSchema = z.object({
 export type MatchStats = z.infer<typeof MatchStatsSchema>;
 
 /**
- * Zod schema for the Match State.
- * This is the single source of truth for a match simulation step.
+ * Zod schema for the Team Rating during a match.
  */
 export const TeamRatingSchema = z.object({
   shooting: z.number().finite().min(0).max(100),
   control: z.number().finite().min(0).max(100).default(50),
+  stamina: z.number().finite().min(0).max(100).default(100),
 });
 
 export type TeamRating = z.infer<typeof TeamRatingSchema>;
@@ -39,6 +39,8 @@ export const MatchStateSchema = z.object({
   awayStats: MatchStatsSchema,
   homeRating: TeamRatingSchema,
   awayRating: TeamRatingSchema,
+  homeTactic: z.string().default('balanced'),
+  awayTactic: z.string().default('balanced'),
   possessionTeam: z.enum(['home', 'away']),
   ballZone: MatchZoneIdSchema,
   currentPhase: z.enum(['OPEN_PLAY', 'SET_PIECE', 'GOAL_KICK', 'CORNER', 'PENALTY', 'KICK_OFF']),
@@ -71,6 +73,8 @@ export function createInitialMatchState(params: {
   seed: number;
   homeRating?: TeamRating;
   awayRating?: TeamRating;
+  homeTactic?: string;
+  awayTactic?: string;
 }): MatchState {
   return {
     matchId: params.matchId,
@@ -81,8 +85,10 @@ export function createInitialMatchState(params: {
     score: { home: 0, away: 0 },
     homeStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
     awayStats: { shots: 0, shotsOnTarget: 0, goals: 0, xG: 0, possessionSeconds: 0 },
-    homeRating: params.homeRating ?? { shooting: 50, control: 50 },
-    awayRating: params.awayRating ?? { shooting: 50, control: 50 },
+    homeRating: params.homeRating ?? { shooting: 50, control: 50, stamina: 100 },
+    awayRating: params.awayRating ?? { shooting: 50, control: 50, stamina: 100 },
+    homeTactic: params.homeTactic ?? 'balanced',
+    awayTactic: params.awayTactic ?? 'balanced',
     possessionTeam: 'home',
     ballZone: 'MID_CENTER_L', // Default kickoff zone
     currentPhase: 'KICK_OFF',

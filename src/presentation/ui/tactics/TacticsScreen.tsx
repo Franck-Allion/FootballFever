@@ -649,25 +649,13 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({ player, tab, sourceArea =
 };
 
 const StatBar: React.FC<{ statKey: string; value: number }> = ({ statKey, value }) => {
-    const labelMapping: Record<string, string> = {
-        // Field
-        tackling: 'Tacle', marking: 'Marq.', positioning: 'Plac.',
-        passing: 'Passe', vision: 'Vis.', clearance: 'Dég.',
-        technique: 'Tech.', dribbling: 'Drib.', pace: 'Vit.',
-        acceleration: 'Acc.', stamina: 'End.', power: 'Puiss.',
-        duels: 'Duels', heading: 'Tête', shooting: 'Tir',
-        finishing: 'Fin.', composure: 'S.F.',
-        // GK
-        lineSaving: 'Ligne', reflexes: 'Réf.', diving: 'Plon.',
-        oneOnOne: '1v1', aerialClaim: 'Air', cornerClaim: 'Corn.',
-        handDistribution: 'Rel. M', kicking: 'Dég. P', communication: 'Com.'
-    };
+    const { t } = useTranslation();
 
     return (
         <div className="group flex flex-col gap-0.5 rounded bg-white/[0.02] p-1 transition-colors hover:bg-white/10 sm:gap-1 sm:p-2">
             <div className="flex justify-between items-center px-0.5">
                 <span className="text-[7px] font-black uppercase tracking-tight text-white/40 group-hover:text-white/80 transition-colors sm:text-[10px]">
-                    {labelMapping[statKey] || statKey}
+                    {t(`tactics.stat_${statKey}`)}
                 </span>
                 <span className={`text-[8px] font-black sm:text-[11px] ${
                     value > 85 ? 'text-[#39ff14]' : value > 70 ? 'text-blue-400' : value > 50 ? 'text-white' : 'text-red-400'

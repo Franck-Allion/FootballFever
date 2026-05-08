@@ -46,51 +46,47 @@ describe('MatchSimulation Logic (Story 7.3)', () => {
   });
 
   it('should calculate higher xG for zones closer to goal', () => {
-    const boxXG = calculateXG('BOX_CENTER_L');
-    const midXG = calculateXG('MID_CENTER_L');
-    const defXG = calculateXG('DEF_LEFT');
+    const boxXG = calculateXG('BOX_CENTER_L', { shooting: 50, control: 50, stamina: 100 });
+    const midXG = calculateXG('MID_CENTER_L', { shooting: 50, control: 50, stamina: 100 });
+    const defXG = calculateXG('DEF_LEFT', { shooting: 50, control: 50, stamina: 100 });
 
     expect(boxXG).toBeGreaterThan(midXG);
     expect(midXG).toBeGreaterThan(defXG);
   });
 
   it('should impact xG based on shooting skill', () => {
-    const lowSkillXG = calculateXG('BOX_CENTER_L', 10);
-    const highSkillXG = calculateXG('BOX_CENTER_L', 90);
+    const lowSkillXG = calculateXG('BOX_CENTER_L', { shooting: 10, control: 50, stamina: 100 });
+    const highSkillXG = calculateXG('BOX_CENTER_L', { shooting: 90, control: 50, stamina: 100 });
 
     expect(highSkillXG).toBeGreaterThan(lowSkillXG);
   });
 
   it('should include distance to goal in xG calculation', () => {
-    const highWideXG = calculateXG('HIGH_LEFT', 50);
-    const midCenterXG = calculateXG('MID_CENTER_L', 50);
+    const highWideXG = calculateXG('HIGH_LEFT', { shooting: 50, control: 50, stamina: 100 });
+    const midCenterXG = calculateXG('MID_CENTER_L', { shooting: 50, control: 50, stamina: 100 });
 
     expect(highWideXG).toBeGreaterThan(midCenterXG);
   });
 
   it('should clamp invalid shooting skill values to finite non-negative xG', () => {
-    expect(calculateXG('BOX_CENTER_L', -100)).toBeGreaterThanOrEqual(0);
-    expect(Number.isFinite(calculateXG('BOX_CENTER_L', Number.NaN))).toBe(true);
+    expect(calculateXG('BOX_CENTER_L', { shooting: -100, control: 50, stamina: 100 })).toBeGreaterThanOrEqual(0);
+    // @ts-ignore
+    expect(Number.isFinite(calculateXG('BOX_CENTER_L', { shooting: Number.NaN, control: 50, stamina: 100 }))).toBe(true);
   });
 
   it('should resolve deterministic goal, save, and miss outcomes', () => {
     const baseState = {
-      ...createInitialMatchState({ matchId: 'test', seed: 1, homeRating: { shooting: 100 } }),
+      ...createInitialMatchState({ 
+        matchId: 'test', 
+        seed: 1, 
+        homeRating: { shooting: 100, control: 50, stamina: 100 } 
+      }),
       ballZone: 'BOX_CENTER_L' as const,
       currentPhase: 'OPEN_PLAY' as const
     };
 
     // calculateXG for BOX_CENTER_L with 100 skill is ~0.15-0.20
-    // saveWindowMultiplier is 1.2, but maxSaveThreshold is 0.95.
-    // If xG is 0.2, save window is [0.2, 0.24].
-    // If we want a guaranteed save, we need a high roll if xG is high? 
-    // No, the code says: roll < xG (Goal), else if roll < min(0.95, xG * 1.2) (Save), else (Miss).
-    // This means the save window is actually very small if xG is small.
-    // Let's use 10 shooting skill to have small xG (~0.05). Save window: [0.05, 0.06].
-    // Let's use 100 shooting skill. xG ~ 0.18. Save window: [0.18, 0.216].
-    // To make this test robust, let's use 0.01 (Goal), 0.19 (Save - assuming xG is ~0.18), 0.99 (Miss).
-    // Actually, let's just use 0.01 for Goal, and for Save let's use xG + 0.01.
-    const xG = calculateXG('BOX_CENTER_L', 100);
+    const xG = calculateXG('BOX_CENTER_L', { shooting: 100, control: 50, stamina: 100 });
     const goalState = resolveShotForTests(baseState, () => xG / 2);
     const saveState = resolveShotForTests(baseState, () => xG + 0.01);
     const missState = resolveShotForTests(baseState, () => 0.99);

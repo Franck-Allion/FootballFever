@@ -68,6 +68,7 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 ### Phase 6: Premium & Distribution (P2 - Post-MVP)
 - **Epic 21: Vue Premium Phaser (Pitch/Animations)**
 - **Epic 22: Polish Mobile & Visual Juice**
+  - Story 22.0: Visual Juice Infrastructure (Phaser FX Layer)
 - **Epic 23: Packaging Desktop Tauri**
 - **Epic 24: Contenu Endgame (Europe/Héritage)**
 
@@ -112,6 +113,10 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 #### Story 3.1: Finite State Machine Controller
 - **As an** Architect, **I want** a centralized `FlowController`, **So that** screen transitions are deterministic.
 - **AC:** Transition `HUB` to `MATCH` only possible if lineup is valid.
+
+#### Story 3.2: Main Menu & Save Management
+- **As a** Player, **I want** to choose between 'New Game' and 'Continue', **So that** I control my progress.
+- **AC:** Main menu with conditional 'Continue' button and reset logic for 'New Game'.
 
 ---
 
@@ -237,6 +242,19 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 #### Story 20.2: Dynamic Standings Update
 - **As a** Competitor, **I want** the league table to be updated instantly after the matchday results, **So that** I can see my current position.
 - **AC:** Points and goal difference calculation. UI display of the full league table with promotion/relegation zone highlights.
+
+---
+
+### Epic 22: Polish Mobile & Visual Juice
+*Goal: Rendre le jeu "vivant" (FX, feedback, transitions).*
+
+#### Story 22.0: Visual Juice Infrastructure (Phaser FX Layer)
+- **As an** Architect, **I want** a transparent Phaser overlay, **So that** I can trigger high-performance particles and animations over the UI.
+- **AC:** Transparent canvas, full-screen superposition, EventBus bridge, performance-optimized loop.
+
+#### Story 22.1: Dynamic UI Animations
+- **As a** Player, **I want** smooth transitions between screens and animated UI elements, **So that** the application feels premium.
+- **AC:** Framer Motion or CSS transitions applied to all major panel entries and exits.
 
 ---
 
