@@ -74,6 +74,7 @@ development_status:
 
   epic-10: done
   10-1-hub-v1-implementation: done
+  10-2-hub-data-sanitization: ready-for-dev
   epic-10-retrospective: optional
 
   epic-11: done
@@ -104,6 +105,7 @@ development_status:
   epic-19: backlog
   epic-19-retrospective: optional
   epic-20: backlog
+  20-0-season-calendar-generator: ready-for-dev
   epic-20-retrospective: optional
   epic-21: backlog
   epic-21-retrospective: optional

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import { useEconomyStore } from '@core/store/useEconomyStore';
 import { GameState } from '@core/fsm/GameState';

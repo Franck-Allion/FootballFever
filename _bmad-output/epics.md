@@ -159,6 +159,19 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 
 ---
 
+### Epic 10: Hub de Gestion V1
+*Goal: Centraliser la gestion de carrière.*
+
+#### Story 10.1: Hub de Gestion V1 [COMPLETED]
+- **As a** Manager, **I want** to see my real squad stats on the hub, **So that** I can track my team's power.
+- **AC:** Replace all hardcoded lists with real store data.
+
+#### Story 10.2: Hub Data Sanitization & Dynamic Calendar
+- **As a** Manager, **I want** a dynamic calendar and accurate match history, **So that** my progress feels unique.
+- **AC:** Reset streak on new game, procedurally generated match nodes, full localization of hub labels.
+
+---
+
 ### Epic 11: Match Texte & Résultat (MVP)
 *Goal: Suivre le match sans Phaser.*
 
@@ -234,6 +247,10 @@ Ce document est le carnet de produit définitif de FootballFever. Il est structu
 
 ### Epic 20: Saison & Championnat Simplifié
 *Goal: Structure de compétition et enjeux de classement.*
+
+#### Story 20.0: Season Calendar Generator (League & Cup)
+- **As a** Manager, **I want** a 30-matchday league schedule with integrated cup rounds, **So that** I plan my squad rotation.
+- **AC:** Round-robin algorithm, cup draw logic, deterministic generation based on season seed.
 
 #### Story 20.1: League Matchday Simulation & Suspense Feed
 - **As a** Manager, **I want** to see the results of other teams in my division after my match, **So that** I can see how my rivals performed.
