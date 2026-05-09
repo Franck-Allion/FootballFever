@@ -14,9 +14,21 @@ export const en: Translations = {
         play_match: 'PLAY MATCH',
         simulating_match: 'SIMULATING MATCH...',
         sprite_position: 'Sprite Position',
-        persistence_recovered: 'Save data was corrupt and has been reset.',
-        game_title: 'FOOTBALL FEVER'
+        persistence_recovered: 'The save was corrupted and has been reset.',
+        game_title: 'FOOTBALL FEVER',
+        continue: 'CONTINUE',
+        continue_subtitle: 'Resume your career',
+        new_game: 'NEW CAREER',
+        new_game_subtitle: 'Start a fresh run',
+        home_label: 'HOME',
+        away_label: 'AWAY',
+        confirm_new_game_title: 'Warning!',
+        confirm_new_game_desc: 'Starting a new career will delete your current save permanently. Are you sure?',
+        confirm_new_game_btn: 'Confirm: New Game',
+        confirm_back_btn: 'Back',
+        tagline: 'Are you the best manager?'
     },
+
     hub: {
         team_management: 'HUB - Team Management',
         toggle_phaser_scene: 'Toggle Phaser Scene',
@@ -65,6 +77,7 @@ export const en: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Form',
         back_hub: 'Back to hub',
+        back_to_menu: 'Back to main menu',
         stat_tackling: 'Tack.',
         stat_marking: 'Mark.',
         stat_positioning: 'Pos.',

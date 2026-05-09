@@ -15,7 +15,18 @@ export const de: Translations = {
         simulating_match: 'MATCH-SIMULATION...',
         sprite_position: 'Sprite-Position',
         persistence_recovered: 'Speicherstand war beschädigt und wurde zurückgesetzt.',
-        game_title: 'FOOTBALL FEVER'
+        game_title: 'FOOTBALL FEVER',
+        continue: 'WEITER',
+        continue_subtitle: 'Setze deine Karriere fort',
+        new_game: 'NEUES SPIEL',
+        new_game_subtitle: 'Starte einen neuen Versuch',
+        home_label: 'HEIM',
+        away_label: 'AUSWÄRTS',
+        confirm_new_game_title: 'Achtung!',
+        confirm_new_game_desc: 'Wenn du eine neue Karriere startest, wird dein aktueller Spielstand dauerhaft gelöscht. Bist du sicher?',
+        confirm_new_game_btn: 'Bestätigen: Neues Spiel',
+        confirm_back_btn: 'Zurück',
+        tagline: 'Bist du der beste Manager?'
     },
     hub: {
         team_management: 'HUB - Teammanagement',
@@ -65,6 +76,7 @@ export const de: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Form',
         back_hub: 'Zurück zum Hub',
+        back_to_menu: 'Zurück zum Hauptmenü',
         stat_tackling: 'Tack.',
         stat_marking: 'Deck.',
         stat_positioning: 'Pos.',

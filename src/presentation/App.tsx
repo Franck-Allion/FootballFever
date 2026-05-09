@@ -9,9 +9,12 @@ import { useDebugStore } from '@core/store/useDebugStore';
 import { DebugConsole } from './ui/debug/DebugConsole';
 import { useTranslation } from './hooks/useTranslation';
 import { useMatchWorker } from '@domains/match/hooks/useMatchWorker';
+import { CommandBus } from '@core/commands/CommandBus';
+import { RESET_GAME_COMMAND } from '@core/commands/ResetGameCommand';
 import HubScreen from './ui/hub/HubScreen';
 import MatchSimulationScreen from './ui/match/MatchSimulationScreen';
 import TacticsScreen from './ui/tactics/TacticsScreen';
+import MainMenu from './ui/menu/MainMenu';
 
 function App()
 {
@@ -35,6 +38,14 @@ function App()
 
         matchWorker.startMatch('HUB_MATCH_1', 7_202);
     }, [currentState, matchWorker]);
+
+    const handleContinue = () => {
+        flowService.navigateTo(GameState.HUB);
+    };
+
+    const handleNewGame = async () => {
+        await CommandBus.getInstance().dispatch({ type: RESET_GAME_COMMAND });
+    };
 
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
@@ -68,16 +79,7 @@ function App()
 
             {currentState === GameState.BOOT && (
                 <div className="flex items-center justify-center min-h-screen">
-                    <div className="text-center p-10 bg-[#121212] rounded-lg shadow-2xl border border-white/10 max-w-sm w-full">
-                        <h1 className="text-4xl font-black text-[#39ff14] mb-2 font-['Space_Grotesk'] tracking-tighter italic">FOOTBALL FEVER</h1>
-                        <p className="text-white/40 italic mb-8 uppercase text-[10px] tracking-[0.3em]">{t('common.initializing')}</p>
-                        <button 
-                            className="w-full bg-[#39ff14] text-black font-black py-4 rounded shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_30px_rgba(57,255,20,0.5)] transition-all active:scale-95 uppercase tracking-widest" 
-                            onClick={() => flowService.navigateTo(GameState.HUB)}
-                        >
-                            {t('common.press_start')}
-                        </button>
-                    </div>
+                    <MainMenu onContinue={handleContinue} onNewGame={handleNewGame} />
                 </div>
             )}
 

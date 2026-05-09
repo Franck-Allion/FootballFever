@@ -28,7 +28,7 @@
 #   - done: Retrospective has been completed
 
 generated: 2026-05-02T16:05:00.000Z
-last_updated: '2026-05-08T14:30:00.000+02:00'
+last_updated: '2026-05-09T11:45:00.000+02:00'
 project: FootballFever
 project_key: NOKEY
 tracking_system: file-system
@@ -47,7 +47,7 @@ development_status:
   epic-02-retrospective: optional
   epic-03: done
   3-1-finite-state-machine-controller: done
-  3-2-main-menu-save-management: ready-for-dev
+  3-2-main-menu-save-management: done
   epic-03-retrospective: optional
   epic-04: done
   4-1-test-coverage-ci-guardrails: done

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from '../../hooks/useTranslation';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import { useEconomyStore } from '@core/store/useEconomyStore';
 import { GameState } from '@core/fsm/GameState';
@@ -23,10 +24,11 @@ const rarityColors: Record<string, string> = {
 };
 
 const HubScreen: React.FC = () => {
+    const { t, setLanguage: setGlobalLanguage } = useTranslation();
     const {
+        division,
         teamName,
         teamLogo,
-        division,
         formation,
         gameInstruction,
         overallRating,
@@ -43,6 +45,13 @@ const HubScreen: React.FC = () => {
     } = useSquadStore();
     const { prestige } = useEconomyStore();
     const [language, setLanguage] = useState('fr');
+
+    // Sync local language state with global translation service
+    const handleLanguageChange = (lang: string) => {
+        setLanguage(lang);
+        setGlobalLanguage(lang as any);
+    };
+
 
     // Initialize roster if empty or re-initialize to apply new 24-player rule
     useEffect(() => {
@@ -107,12 +116,12 @@ const HubScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <label className="sr-only" htmlFor="language-select">Changer la langue</label>
                         <select
                             id="language-select"
                             value={language}
-                            onChange={(e) => setLanguage(e.target.value)}
+                            onChange={(e) => handleLanguageChange(e.target.value)}
                             className="h-10 rounded border border-white/10 bg-black/40 px-3 text-[11px] font-black uppercase tracking-widest text-white/70 outline-none transition-colors hover:border-[#39ff14]/50 focus:border-[#39ff14]"
                         >
                             <option value="fr">FR</option>
@@ -120,6 +129,17 @@ const HubScreen: React.FC = () => {
                             <option value="es">ES</option>
                             <option value="de">DE</option>
                         </select>
+                        
+                        <div className="h-6 w-px bg-white/10" />
+
+                        <button 
+                            onClick={() => FlowService.getInstance().navigateTo(GameState.BOOT)}
+                            className="flex h-10 w-10 items-center justify-center rounded border border-white/10 bg-black/40 text-white/40 transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 hover:text-[#39ff14] active:scale-95"
+                            aria-label={t('tactics.back_to_menu')}
+                            title={t('tactics.back_to_menu')}
+                        >
+                            <span className="material-symbols-outlined text-xl">home</span>
+                        </button>
                     </div>
                 </header>
 

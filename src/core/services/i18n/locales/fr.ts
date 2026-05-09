@@ -15,7 +15,18 @@ export const fr: Translations = {
         simulating_match: 'SIMULATION DU MATCH...',
         sprite_position: 'Position du Sprite',
         persistence_recovered: 'La sauvegarde etait corrompue et a ete reinitialisee.',
-        game_title: 'FOOTBALL FEVER'
+        game_title: 'FOOTBALL FEVER',
+        continue: 'CONTINUER',
+        continue_subtitle: 'Reprendre votre carrière',
+        new_game: 'NOUVELLE PARTIE',
+        new_game_subtitle: 'Démarrer une fresh run',
+        home_label: 'DOMICILE',
+        away_label: 'EXTÉRIEUR',
+        confirm_new_game_title: 'Attention !',
+        confirm_new_game_desc: 'Démarrer une nouvelle carrière effacera votre sauvegarde actuelle définitivement. Êtes-vous certain ?',
+        confirm_new_game_btn: 'Confirmer : Nouvelle Partie',
+        confirm_back_btn: 'Retour',
+        tagline: 'Êtes-vous le meilleur entraîneur ?'
     },
     hub: {
         team_management: 'HUB - Gestion de l\'Équipe',
@@ -65,6 +76,7 @@ export const fr: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Forme',
         back_hub: 'Retour au hub',
+        back_to_menu: 'Retour au menu principal',
         stat_tackling: 'Tacle',
         stat_marking: 'Marq.',
         stat_positioning: 'Plac.',

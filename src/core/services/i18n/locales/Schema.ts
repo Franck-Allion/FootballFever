@@ -15,7 +15,18 @@ export const LocaleSchema = z.object({
         simulating_match: z.string(),
         sprite_position: z.string(),
         persistence_recovered: z.string(),
-        game_title: z.string()
+        game_title: z.string(),
+        continue: z.string(),
+        continue_subtitle: z.string(),
+        new_game: z.string(),
+        new_game_subtitle: z.string(),
+        home_label: z.string(),
+        away_label: z.string(),
+        confirm_new_game_title: z.string(),
+        confirm_new_game_desc: z.string(),
+        confirm_new_game_btn: z.string(),
+        confirm_back_btn: z.string(),
+        tagline: z.string()
     }),
     hub: z.object({
         team_management: z.string(),
@@ -65,6 +76,7 @@ export const LocaleSchema = z.object({
         tab_stats: z.string(),
         tab_forme: z.string(),
         back_hub: z.string(),
+        back_to_menu: z.string(),
         stat_tackling: z.string(),
         stat_marking: z.string(),
         stat_positioning: z.string(),

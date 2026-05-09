@@ -111,13 +111,28 @@ export class DatabaseService {
         return data ? GameStateSchema.parse(data) : undefined;
     }
 
+    public async hasSave(): Promise<boolean> {
+        try {
+            const count = await this.db.gameState.count();
+            return count > 0;
+        } catch (error) {
+            console.error('DatabaseService: Error checking for save:', error);
+            return false;
+        }
+    }
+
     // Utility
     public async clearAll(): Promise<void> {
-        await Promise.all([
-            this.db.players.clear(),
-            this.db.teams.clear(),
-            this.db.gameState.clear()
-        ]);
+        try {
+            await Promise.all([
+                this.db.players.clear(),
+                this.db.teams.clear(),
+                this.db.gameState.clear()
+            ]);
+        } catch (error) {
+            console.error('DatabaseService: Error clearing database:', error);
+            throw new Error('FAILED_TO_RESET_DATABASE');
+        }
     }
 
     public async close(): Promise<void> {

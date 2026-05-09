@@ -5,6 +5,7 @@ interface EconomyState {
     prestige: number;
     addPrestige: (amount: number) => void;
     setPrestige: (amount: number) => void;
+    reset: () => void;
 }
 
 export const useEconomyStore = create<EconomyState>()(
@@ -12,6 +13,7 @@ export const useEconomyStore = create<EconomyState>()(
         prestige: 0,
         addPrestige: (amount) => set((state) => ({ prestige: state.prestige + amount })),
         setPrestige: (prestige) => set({ prestige }),
+        reset: () => set({ prestige: 0 }),
     })
 );
 

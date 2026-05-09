@@ -6,7 +6,8 @@ Status: ready-for-dev
 
 As a Manager,
 I want the Hub to display accurate information about my team's recent form and upcoming matches,
-so that I can trust the interface and plan my tactical rotations effectively.
+and I want a high-quality way to return to the Main Menu,
+so that I can trust the interface, plan rotations, and navigate the application seamlessly.
 
 ## Acceptance Criteria
 
@@ -14,7 +15,8 @@ so that I can trust the interface and plan my tactical rotations effectively.
 2. **Dynamic Calendar**: Replace the static `routeNodes` array with a generated sequence of at least 5 nodes (Matches and Rest periods).
 3. **Team Identity**: Ensure `teamName` and `teamLogo` are not hardcoded but can be initialized/updated.
 4. **Data Synchronization**: All team-level averages (stamina, morale) shown in the Hub must be strictly derived from the store's current state, without any fallback to mock values.
-5. **Localization**: Localize all labels in the Hub sections (e.g., "Série en cours", "Moral de l'équipe", "Fatigue") using the translation system.
+5. **Main Menu Exit**: Add a "AAA-compliant" exit button (e.g., Home or Logout icon) in the Hub header or sidebar to return to the BOOT state.
+6. **Localization**: Localize all labels in the Hub sections (e.g., "Série en cours", "Moral de l'équipe", "Fatigue", "Quitter") using the translation system.
 
 ## Tasks / Subtasks
 
@@ -23,6 +25,7 @@ so that I can trust the interface and plan my tactical rotations effectively.
   - [ ] Implement a `generateCalendar()` utility to populate `routeNodes` dynamically.
 - [ ] **UI Connection**
   - [ ] Update `HubScreen.tsx` to handle empty streaks gracefully (e.g., display "N/A" or empty slots).
+  - [ ] Implement "Exit to Menu" button in the Hub (Header or Sidebar).
   - [ ] Localize hardcoded strings in `HubScreen.tsx`.
 - [ ] **Integration**
   - [ ] Ensure `initializeRoster(true)` also resets the calendar and streak.
@@ -30,7 +33,7 @@ so that I can trust the interface and plan my tactical rotations effectively.
 ## Dev Notes
 
 - **Calendar Logic:** For the MVP, a simple array of 3 matches and 2 rest periods is sufficient, but it should be generated, not hardcoded.
-- **Visuals:** Empty streak slots should maintain the "dark glass" styling to avoid visual layout shifts.
+- **Visuals:** The Exit button should be subtle but accessible, respecting the dark glassmorphism theme. Use `material-symbols-outlined`.
 
 ### Project Context Rules
 

@@ -14,9 +14,21 @@ export const es: Translations = {
         play_match: 'JUGAR PARTIDO',
         simulating_match: 'SIMULACIÓN DEL PARTIDO...',
         sprite_position: 'Posición del Sprite',
-        persistence_recovered: 'El guardado estaba corrupto y ha sido reiniciado.',
-        game_title: 'FOOTBALL FEVER'
+        persistence_recovered: 'La partida guardada estaba corrupta y ha sido reiniciada.',
+        game_title: 'FOOTBALL FEVER',
+        continue: 'CONTINUAR',
+        continue_subtitle: 'Reanuda tu carrera',
+        new_game: 'NUEVA PARTIDA',
+        new_game_subtitle: 'Comienza de cero',
+        home_label: 'LOCAL',
+        away_label: 'VISITANTE',
+        confirm_new_game_title: '¡Atención!',
+        confirm_new_game_desc: 'Comenzar una nueva carrera borrará definitivamente tu partida actual. ¿Estás seguro?',
+        confirm_new_game_btn: 'Confirmar: Nueva Partida',
+        confirm_back_btn: 'Volver',
+        tagline: '¿Eres el mejor entrenador?'
     },
+
     hub: {
         team_management: 'HUB - Gestión del Equipo',
         toggle_phaser_scene: 'Cambiar Escena Phaser',
@@ -65,6 +77,7 @@ export const es: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Forma',
         back_hub: 'Volver al Hub',
+        back_to_menu: 'Volver al Menú Principal',
         stat_tackling: 'Entr.',
         stat_marking: 'Marc.',
         stat_positioning: 'Pos.',
