@@ -13,7 +13,7 @@ export async function handleResetGame(command: Command): Promise<void> {
     await DatabaseService.getInstance().clearAll();
     
     // 2. Clear stores
-    useSquadStore.getState().initializeRoster(true); // Forces new generation
+    await useSquadStore.getState().initializeRoster(true); // Forces new generation
     useEconomyStore.getState().reset();
     useMatchLogStore.getState().clearLogs();
     

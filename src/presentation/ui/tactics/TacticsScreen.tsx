@@ -19,6 +19,7 @@ import {
 } from '@domains/shared/services/LineupService';
 import { TacticalInstructionService, type TacticalInstructionId } from '@domains/shared/services/TacticalInstructionService';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
+import { AudioService } from '@core/services/audio/AudioService';
 
 type PlayerGroup = 'goalkeepers' | 'defenders' | 'midfielders' | 'attackers';
 type DetailTab = 'resume' | 'stats' | 'forme';
@@ -47,14 +48,16 @@ const rarityBgClasses: Record<string, string> = {
 
 const eligibilityClasses: Record<Eligibility, string> = {
     best: 'border-[#39ff14] bg-[#39ff14]/12 shadow-[0_0_18px_rgba(57,255,20,0.25)]',
-    adapted: 'border-amber-400 bg-amber-400/12 shadow-[0_0_18px_rgba(251,191,36,0.18)]',
-    invalid: 'border-red-500 bg-red-500/10 shadow-[0_0_18px_rgba(239,68,68,0.16)]',
+    secondary: 'border-[#39ff14]/50 bg-[#39ff14]/5 shadow-[0_0_12px_rgba(57,255,20,0.1)]',
+    adapted: 'border-orange-500 bg-orange-500/12 shadow-[0_0_18px_rgba(249,115,22,0.18)]',
+    invalid: 'border-red-600 bg-red-600/10 shadow-[0_0_18px_rgba(220,38,38,0.16)]',
 };
 
 const haloClasses: Record<Eligibility, string> = {
     best: 'bg-[#39ff14] shadow-[0_0_18px_rgba(57,255,20,0.85)]',
-    adapted: 'bg-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.7)]',
-    invalid: 'bg-red-500 shadow-[0_0_18px_rgba(239,68,68,0.75)]',
+    secondary: 'bg-[#39ff14]/60 shadow-[0_0_15px_rgba(57,255,20,0.6)]',
+    adapted: 'bg-orange-500 shadow-[0_0_18px_rgba(249,115,22,0.7)]',
+    invalid: 'bg-red-600 shadow-[0_0_18px_rgba(220,38,38,0.75)]',
 };
 
 const groupLabels: Record<PlayerGroup, string> = {
@@ -90,17 +93,12 @@ const getPlayerGroup = (player: Player): PlayerGroup => {
 };
 
 const readDragData = (entry: unknown): Record<string, unknown> => {
-    const candidate = entry as { data?: Record<string, unknown> | { current?: Record<string, unknown> } } | undefined;
-    if (!candidate) return {};
-    
-    // In @dnd-kit/react, data is usually directly on the entry or in entry.data
-    // In @dnd-kit/core, it was in entry.data.current
-    const data = candidate.data ?? candidate;
-    if (typeof data === 'object' && data !== null && 'current' in data) {
-        return (data as { current: Record<string, unknown> }).current ?? {};
-    }
+    if (!entry) return {};
+    const candidate = entry as any;
 
-    return (data as Record<string, unknown>) ?? {};
+    // Deep search for data payload
+    const data = candidate.data?.current ?? candidate.data ?? candidate.current ?? candidate;
+    return (data && typeof data === 'object') ? data : {};
 };
 
 const readEventSource = (event: unknown): unknown => {
@@ -806,6 +804,9 @@ const TacticsScreen: React.FC = () => {
     const [detailTab, setDetailTab] = useState<DetailTab>('resume');
 
     useEffect(() => {
+        // Unlock audio context on screen mount
+        AudioService.getInstance().unlock();
+
         if (roster.length < 24) {
             initializeRoster(true);
             return;
@@ -873,8 +874,18 @@ const TacticsScreen: React.FC = () => {
     const handlePlaceSelectedPlayer = (destination: AssignmentDestination) => {
         if (!selectedPlayerId) return;
 
+        // Determine if target is occupied for sound
+        const destinationMap = destination.area === 'pitch' ? lineupSlots : 
+                              destination.area === 'bench' ? benchSlots : null;
+        const isOccupied = destinationMap ? !!destinationMap[destination.slotId as keyof typeof destinationMap] : false;
+
         const moved = movePlayerToSlot(selectedPlayerId, destination);
         if (moved) {
+            if (isOccupied) {
+                AudioService.getInstance().play('ui_tactics_swap_01');
+            } else {
+                AudioService.getInstance().play('ui_tactics_place_01');
+            }
             // After moving, keep it selected but update its position context
             setSelectedSourceArea(destination.area);
         }
@@ -888,6 +899,11 @@ const TacticsScreen: React.FC = () => {
         const pointer = readPointerCoordinates(event);
 
         setDraggedPlayerId(playerId);
+        
+        if (playerId) {
+            AudioService.getInstance().play('ui_tactics_pickup_01');
+        }
+
         if (sourceElement && pointer) {
             const rect = sourceElement.getBoundingClientRect();
             setDragGhostOffset({
@@ -912,7 +928,21 @@ const TacticsScreen: React.FC = () => {
         const destination = (targetData.destination as AssignmentDestination | undefined) ?? parseDestinationId(targetId);
 
         if (playerId && destination) {
-            movePlayerToSlot(playerId, destination);
+            // Determine if it's a swap before moving (safe check for areas)
+            const destinationMap = destination.area === 'pitch' ? lineupSlots : 
+                                  destination.area === 'bench' ? benchSlots : null;
+            
+            const isOccupied = destinationMap ? !!destinationMap[destination.slotId as keyof typeof destinationMap] : false;
+            
+            const moved = movePlayerToSlot(playerId, destination);
+            
+            if (moved) {
+                if (isOccupied) {
+                    AudioService.getInstance().play('ui_tactics_swap_01');
+                } else {
+                    AudioService.getInstance().play('ui_tactics_place_01');
+                }
+            }
         }
 
         setDraggedPlayerId(null);

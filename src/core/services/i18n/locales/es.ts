@@ -26,14 +26,38 @@ export const es: Translations = {
         confirm_new_game_desc: 'Comenzar una nueva carrera borrará definitivamente tu partida actual. ¿Estás seguro?',
         confirm_new_game_btn: 'Confirmar: Nueva Partida',
         confirm_back_btn: 'Volver',
-        tagline: '¿Eres el mejor entrenador?'
+        tagline: '¿Eres el mejor entrenador?',
+        back_to_menu: 'Volver al Menú Principal'
     },
 
     hub: {
         team_management: 'HUB - Gestión del Equipo',
         toggle_phaser_scene: 'Cambiar Escena Phaser',
         toggle_movement: 'Cambiar Movimiento',
-        add_fx_sprite: 'Añadir Sprite FX'
+        add_fx_sprite: 'Añadir Sprite FX',
+        division_label: 'División',
+        credits_label: 'créditos',
+        morale_label: 'Moral del equipo',
+        streak_label: 'Racha actual',
+        no_history: 'Sin partidos jugados',
+        fatigue_label: 'Fatiga del equipo',
+        tactic_label: 'Táctica',
+        instruction_label: 'Consigna',
+        composition_label: 'Alineación',
+        substitutes_label: 'Suplentes',
+        play_button: 'JUGAR PARTIDO',
+        unknown_opponent: 'Rival desconocido',
+        shop_label: 'Tienda',
+        shop_subtitle: 'Mejoras y Equipamiento',
+        mercato_label: 'Mercato',
+        mercato_subtitle: 'Fichajes y Traspasos',
+        attr_atk: 'ATQ',
+        attr_mid: 'MED',
+        attr_def: 'DEF',
+        match_day: 'Partido {0}',
+        rest_day: 'Descanso',
+        lineup_incomplete: 'Alineación incompleta',
+        incomplete_label: 'INCOMPLETO'
     },
     match: {
         kickoff: "¡Saque inicial!",
@@ -52,8 +76,11 @@ export const es: Translations = {
         ht_overlay_desc: "Los jugadores se toman un respiro. ¿Estás listo para la segunda parte?",
         ft_overlay_title: "PARTIDO TERMINADO",
         ft_overlay_desc: "Ha sonado el pitido final. Consulta las estadísticas de tus jugadores.",
-        home_label: "LOCAL",
-        away_label: "VISITANTE"
+        home_label: "HOME",
+        away_label: "AWAY",
+        win_short: 'V',
+        loss_short: 'D',
+        draw_short: 'E'
     },
     debug: {
         console_title: 'Consola del Sistema',
@@ -77,7 +104,6 @@ export const es: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Forma',
         back_hub: 'Volver al Hub',
-        back_to_menu: 'Volver al Menú Principal',
         stat_tackling: 'Entr.',
         stat_marking: 'Marc.',
         stat_positioning: 'Pos.',

@@ -3,7 +3,7 @@ import { type RatedLineupPlayer, type RatingPosition, TeamRatingService } from '
 
 export type AssignmentMap = Record<string, string | null>;
 export type AssignmentArea = 'pitch' | 'bench' | 'unassign';
-export type Eligibility = 'best' | 'adapted' | 'invalid';
+export type Eligibility = 'best' | 'secondary' | 'adapted' | 'invalid';
 export type SlotRole = 'GK' | 'DEF' | 'MID' | 'ATT';
 
 export interface FormationSlot {
@@ -177,20 +177,41 @@ export class LineupService {
         if (isGoalkeeper(player)) return 0.1;
 
         if (player.mainPosition === slot.position) return 1.0;
-        if ((player.secondaryPositions || []).includes(slot.position)) return 0.85;
-        if (isSameLine(player.mainPosition, slot.position)) return 0.5;
+        if ((player.secondaryPositions || []).includes(slot.position)) return 0.95;
+        if (isSameLine(player.mainPosition, slot.position)) return 0.75;
         
         return 0.25;
     }
 
     public static getAdjustedRating(player: Player, slot: FormationSlot | BenchSlot): number {
         const efficiency = LineupService.getPositionEfficiency(player, slot);
+        
+        // If playing in main position, return the true overall rating
+        if (efficiency >= 1.0) {
+            return player.overallRating;
+        }
+
+        // Calculate position-specific rating based on relevant stats
         const positionRating = TeamRatingService.calculatePlayerPositionRating(
             player, 
             'position' in slot ? slot.position : player.mainPosition
         );
 
-        return Math.round(positionRating * efficiency);
+        // CAP: The position rating cannot exceed the natural overall rating.
+        // Then apply the efficiency penalty (e.g. 0.95 for secondary).
+        const baseRating = Math.min(player.overallRating, positionRating);
+
+        return Math.round(baseRating * efficiency);
+    }
+
+    public static getPositionEligibility(player: Player, destination: FormationSlot | BenchSlot): Eligibility {
+        const efficiency = LineupService.getPositionEfficiency(player, destination);
+
+        if (efficiency >= 1.0) return 'best';
+        if (efficiency >= 0.95) return 'secondary';
+        if (efficiency >= 0.75) return 'adapted';
+
+        return 'invalid';
     }
 
     public static createInitialAssignments(roster: Player[], formation: string): {
@@ -258,15 +279,6 @@ export class LineupService {
         });
 
         return { lineupSlots, benchSlots };
-    }
-
-    public static getPositionEligibility(player: Player, destination: FormationSlot | BenchSlot): Eligibility {
-        const efficiency = LineupService.getPositionEfficiency(player, destination);
-
-        if (efficiency >= 0.85) return 'best';
-        if (efficiency >= 0.5) return 'adapted';
-
-        return 'invalid';
     }
 
     public static movePlayer(input: MovePlayerInput): MovePlayerResult {

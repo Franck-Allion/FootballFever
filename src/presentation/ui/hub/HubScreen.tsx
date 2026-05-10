@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useMatchWorker } from '@domains/match/hooks/useMatchWorker';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import { useEconomyStore } from '@core/store/useEconomyStore';
 import { GameState } from '@core/fsm/GameState';
@@ -22,9 +23,8 @@ const rarityColors: Record<string, string> = {
     Epic: 'text-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]',
     Legendary: 'text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]',
 };
-
 const HubScreen: React.FC = () => {
-    const { t, setLanguage: setGlobalLanguage } = useTranslation();
+    const { t, language, setLanguage: setGlobalLanguage } = useTranslation();
     const {
         division,
         teamName,
@@ -44,26 +44,27 @@ const HubScreen: React.FC = () => {
         computeOverallRating,
     } = useSquadStore();
     const { prestige } = useEconomyStore();
-    const [language, setLanguage] = useState('fr');
+    const matchWorker = useMatchWorker();
+    const hasAttemptedInit = React.useRef(false);
 
-    // Sync local language state with global translation service
+    // Sync local selection with global translation service
     const handleLanguageChange = (lang: string) => {
-        setLanguage(lang);
         setGlobalLanguage(lang as any);
     };
 
-
     // Initialize roster if empty or re-initialize to apply new 24-player rule
     useEffect(() => {
-        if (roster.length < 24) {
+        if (roster.length < 24 && !hasAttemptedInit.current) {
+            hasAttemptedInit.current = true;
             initializeRoster(true);
         }
     }, [roster.length, initializeRoster]);
 
+
     const fatigueAvg = Math.max(0, 100 - staminaAvg);
     const nextMatch = routeNodes.find((node) => node.status === 'current' && node.type === 'match');
     const isMercatoOpen = routeNodes.some((node) => node.status === 'current' && node.type === 'mercato');
-    const matchLocation = 'Domicile';
+    const matchLocation = t('match.home_label'); // Store-driven location logic to be added in future stories
 
     const handlePlayMatch = () => {
         FlowService.getInstance().navigateTo(GameState.MATCH_SIM);
@@ -73,28 +74,32 @@ const HubScreen: React.FC = () => {
         FlowService.getInstance().navigateTo(GameState.TACTICS);
     };
 
+    const handleExitToMenu = () => {
+        // Stop match worker if running to prevent leaks
+        if (matchWorker) {
+            matchWorker.terminate();
+        }
+        FlowService.getInstance().navigateTo(GameState.BOOT);
+    };
+
     const startingEleven = useMemo(() => {
         const assignedEleven = LineupService.getAssignedStarters(roster, formation, lineupSlots);
         return assignedEleven.length > 0 ? assignedEleven : TeamRatingService.selectStartingEleven(roster, formation);
     }, [roster, formation, lineupSlots]);
 
+    const isLineupComplete = useMemo(() => {
+        const assignedCount = Object.values(lineupSlots).filter(id => id !== null).length;
+        return assignedCount === 11;
+    }, [lineupSlots]);
+
     const activeInstruction = TacticalInstructionService.getInstruction(gameInstruction);
     
-    const startingIds = useMemo(() => new Set(startingEleven.map(({ player }) => player.id)), [startingEleven]);
-
     const substitutes = useMemo(() => {
-        const assignedSubstitutes = Object.values(benchSlots)
+        return Object.values(benchSlots)
             .filter((playerId): playerId is string => Boolean(playerId))
             .map((playerId) => roster.find((player) => player.id === playerId))
             .filter((player): player is typeof roster[number] => Boolean(player));
-        
-        return assignedSubstitutes.length > 0
-            ? assignedSubstitutes
-            : roster
-                .filter((player) => !startingIds.has(player.id))
-                .sort((a, b) => b.overallRating - a.overallRating)
-                .slice(0, 5);
-    }, [benchSlots, roster, startingIds]);
+    }, [benchSlots, roster]);
 
     return (
         <div className="min-h-screen bg-[#050505] text-[#e3e2e2] pb-10 font-['Space_Grotesk'] selection:bg-[#39ff14]/30 overflow-x-hidden">
@@ -109,9 +114,9 @@ const HubScreen: React.FC = () => {
                                 {teamName}
                             </h1>
                             <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]">
-                                <span className="text-white/50">Division {division}</span>
+                                <span className="text-white/50">{t('hub.division_label')} {division}</span>
                                 <span className="h-1 w-1 rounded-full bg-[#39ff14] shadow-[0_0_5px_#39ff14]" aria-hidden="true" />
-                                <span className="text-[#39ff14]">{prestige.toLocaleString('fr-FR')} credits</span>
+                                <span className="text-[#39ff14]">{prestige.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US')} {t('hub.credits_label')}</span>
                             </div>
                         </div>
                     </div>
@@ -133,10 +138,10 @@ const HubScreen: React.FC = () => {
                         <div className="h-6 w-px bg-white/10" />
 
                         <button 
-                            onClick={() => FlowService.getInstance().navigateTo(GameState.BOOT)}
+                            onClick={handleExitToMenu}
                             className="flex h-10 w-10 items-center justify-center rounded border border-white/10 bg-black/40 text-white/40 transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 hover:text-[#39ff14] active:scale-95"
-                            aria-label={t('tactics.back_to_menu')}
-                            title={t('tactics.back_to_menu')}
+                            aria-label={t('common.back_to_menu')}
+                            title={t('common.back_to_menu')}
                         >
                             <span className="material-symbols-outlined text-xl">home</span>
                         </button>
@@ -144,13 +149,13 @@ const HubScreen: React.FC = () => {
                 </header>
 
                 <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <ProgressPanel label="Moral de l'equipe" value={morale} status={`${morale}%`} tone="positive" />
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 shadow-inner backdrop-blur-2xl">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Serie en cours</p>
-                        <div className="mt-4 flex items-center justify-between gap-2" aria-label={`Derniers résultats: ${streak.slice(-5).join(', ')}`}>
-                            {streak.slice(-5).map((result, index) => {
-                                const label = resultLabels[result] ?? result;
-                                const color = label === 'V' ? 'text-[#39ff14]' : label === 'D' ? 'text-red-400' : 'text-white/55';
+                    <ProgressPanel label={t('hub.morale_label')} value={morale} status={`${morale}%`} tone="positive" />
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 shadow-inner backdrop-blur-2xl min-h-[88px]">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">{t('hub.streak_label')}</p>
+                        <div className="mt-4 flex items-center justify-between gap-2" aria-label={`${t('hub.streak_label')}: ${streak.length > 0 ? streak.slice(-5).join(', ') : t('hub.no_history')}`}>
+                            {streak.length > 0 ? streak.slice(-5).map((result, index) => {
+                                const label = t(`match.${result === 'W' ? 'win_short' : result === 'L' ? 'loss_short' : 'draw_short'}`);
+                                const color = result === 'W' ? 'text-[#39ff14]' : result === 'L' ? 'text-red-400' : 'text-white/55';
 
                                 return (
                                     <React.Fragment key={`${result}-${index}`}>
@@ -158,30 +163,32 @@ const HubScreen: React.FC = () => {
                                         <span className={`text-2xl font-black leading-none ${color}`}>{label}</span>
                                     </React.Fragment>
                                 );
-                            })}
+                            }) : (
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-white/20 italic">{t('hub.no_history')}</p>
+                            )}
                         </div>
                     </div>
-                    <ProgressPanel label="Fatigue de l'equipe" value={fatigueAvg} status={`${fatigueAvg}%`} tone="warning" />
+                    <ProgressPanel label={t('hub.fatigue_label')} value={fatigueAvg} status={`${fatigueAvg}%`} tone="warning" />
                 </section>
 
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <button 
                         onClick={handleOpenTactics}
-                        aria-label={`Tactique actuelle: ${formation}. Consigne: ${activeInstruction.label}. Cliquez pour modifier.`}
+                        aria-label={`${t('hub.tactic_label')}: ${formation}. ${t('hub.instruction_label')}: ${activeInstruction.label}.`}
                         className="group min-h-48 rounded-xl border border-white/10 bg-white/[0.03] p-5 text-left backdrop-blur-2xl transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 active:scale-[0.99]"
                     >
                         <div className="flex h-full flex-col justify-between gap-5">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Tactique</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">{t('hub.tactic_label')}</p>
                                     <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-white">{formation}</h2>
                                 </div>
                                 <span className="material-symbols-outlined rounded bg-black/50 p-3 text-3xl text-[#39ff14] shadow-[0_0_14px_rgba(57,255,20,0.25)]" aria-hidden="true">schema</span>
                             </div>
                             <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Consigne</p>
-                                    <p className="mt-1 text-lg font-black uppercase text-[#39ff14]">{activeInstruction.label}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">{t('hub.instruction_label')}</p>
+                                    <p className="mt-1 text-lg font-black uppercase text-[#39ff14]">{t(activeInstruction.label)}</p>
                                 </div>
                                 <span className="material-symbols-outlined text-white/30 transition-transform group-hover:translate-x-1" aria-hidden="true">chevron_right</span>
                             </div>
@@ -190,33 +197,46 @@ const HubScreen: React.FC = () => {
 
                     <button 
                         onClick={handleOpenTactics}
-                        aria-label={`Composition de l'équipe. Note globale: ${overallRating}%. Cliquez pour gérer l'effectif.`}
-                        className="group min-h-48 rounded-xl border border-white/10 bg-white/[0.03] p-5 text-left backdrop-blur-2xl transition-all hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5 active:scale-[0.99]"
+                        aria-label={`${t('hub.composition_label')}. ${isLineupComplete ? `Note globale: ${overallRating}%` : t('hub.lineup_incomplete')}.`}
+                        className={`group min-h-48 rounded-xl border p-5 text-left backdrop-blur-2xl transition-all active:scale-[0.99] ${
+                            isLineupComplete 
+                                ? 'border-white/10 bg-white/[0.03] hover:border-[#39ff14]/50 hover:bg-[#39ff14]/5' 
+                                : 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                        }`}
                     >
                         <div className="flex h-full flex-col gap-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">Composition</p>
-                                    <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-[#39ff14]">{overallRating}%</h2>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">{t('hub.composition_label')}</p>
+                                    <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight ${isLineupComplete ? 'text-[#39ff14]' : 'text-amber-500'}`}>
+                                        {isLineupComplete ? `${overallRating}%` : '--%'}
+                                    </h2>
+                                    {!isLineupComplete && (
+                                        <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-amber-500/80 animate-pulse">
+                                            {t('hub.incomplete_label')}
+                                        </p>
+                                    )}
                                 </div>
-                                <span className="material-symbols-outlined rounded bg-black/50 p-3 text-3xl text-[#39ff14] shadow-[0_0_14px_rgba(57,255,20,0.25)]" aria-hidden="true">groups</span>
+                                <span className={`material-symbols-outlined rounded bg-black/50 p-3 text-3xl shadow-[0_0_14px_rgba(0,0,0,0.25)] ${isLineupComplete ? 'text-[#39ff14]' : 'text-amber-500 animate-bounce'}`} aria-hidden="true">
+                                    {isLineupComplete ? 'groups' : 'warning'}
+                                </span>
                             </div>
                             <div className="grid grid-cols-3 gap-2 text-center">
                                 <div className="border border-white/10 bg-black/25 px-2 py-1.5">
-                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Att</p>
-                                    <p className="text-sm font-black text-white">{composites.attack}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">{t('hub.attr_atk')}</p>
+                                    <p className="text-sm font-black text-white">{isLineupComplete ? composites.attack : '??'}</p>
                                 </div>
                                 <div className="border border-white/10 bg-black/25 px-2 py-1.5">
-                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Mil</p>
-                                    <p className="text-sm font-black text-white">{composites.midfield}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">{t('hub.attr_mid')}</p>
+                                    <p className="text-sm font-black text-white">{isLineupComplete ? composites.midfield : '??'}</p>
                                 </div>
                                 <div className="border border-white/10 bg-black/25 px-2 py-1.5">
-                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">Def</p>
-                                    <p className="text-sm font-black text-white">{composites.defense}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/35">{t('hub.attr_def')}</p>
+                                    <p className="text-sm font-black text-white">{isLineupComplete ? composites.defense : '??'}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-2">
-                                {startingEleven.map(({ player, assignedPosition, rating }) => (
+                                {isLineupComplete ? startingEleven.map(({ player, assignedPosition, rating }) => (
                                     <div key={player.id} className="flex items-center gap-2 min-w-0">
                                         <div className="h-6 w-6 shrink-0 rounded-full bg-black/40 border border-white/10 overflow-hidden">
                                             <img src={player.portraitUrl || '/assets/portraits/default.png'} alt="" className="h-full w-full object-cover" />
@@ -227,10 +247,16 @@ const HubScreen: React.FC = () => {
                                         </span>
                                         <span className="ml-auto shrink-0 text-[10px] font-black text-white/45">{rating}</span>
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="col-span-full py-4 text-center">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/20 italic">
+                                            {t('hub.lineup_incomplete')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="mt-auto border-t border-white/10 pt-3">
-                                <p className="text-[9px] font-black uppercase tracking-[0.24em] text-white/30">Remplacants</p>
+                                <p className="text-[9px] font-black uppercase tracking-[0.24em] text-white/30">{t('hub.substitutes_label')}</p>
                                 <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] font-bold uppercase tracking-wide text-white/45">
                                     {substitutes.map((player, i) => (
                                         <React.Fragment key={player.id}>
@@ -245,39 +271,51 @@ const HubScreen: React.FC = () => {
                 </section>
 
                 <button
+                    disabled={!isLineupComplete}
                     onClick={handlePlayMatch}
-                    aria-label={`Jouer le prochain match: ${teamName} contre ${nextMatch?.opponent || 'adversaire inconnu'}`}
-                    className="group relative min-h-28 overflow-hidden rounded-xl bg-[#39ff14] px-6 py-5 text-black shadow-[0_0_40px_rgba(57,255,20,0.28)] transition-all hover:shadow-[0_0_60px_rgba(57,255,20,0.42)] active:scale-[0.99]"
+                    title={!isLineupComplete ? t('hub.lineup_incomplete') : undefined}
+                    aria-label={`${t('hub.play_button')}: ${teamName} vs ${nextMatch?.opponent || t('hub.unknown_opponent')}`}
+                    className={`group relative min-h-28 overflow-hidden rounded-xl px-6 py-5 transition-all active:scale-[0.99] ${
+                        isLineupComplete 
+                            ? 'bg-[#39ff14] text-black shadow-[0_0_40px_rgba(57,255,20,0.28)] hover:shadow-[0_0_60px_rgba(57,255,20,0.42)]' 
+                            : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed grayscale'
+                    }`}
                 >
-                    <div className="absolute inset-0 translate-x-[-100%] skew-x-[-45deg] bg-white/25 transition-transform duration-1000 group-hover:translate-x-[100%]" aria-hidden="true" />
+                    {isLineupComplete && <div className="absolute inset-0 translate-x-[-100%] skew-x-[-45deg] bg-white/25 transition-transform duration-1000 group-hover:translate-x-[100%]" aria-hidden="true" />}
                     <div className="relative z-10 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-5 text-left">
-                            <span className="material-symbols-outlined rounded bg-black p-3 text-4xl text-[#39ff14]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">play_arrow</span>
+                            <span className={`material-symbols-outlined rounded p-3 text-4xl ${isLineupComplete ? 'bg-black text-[#39ff14]' : 'bg-white/5 text-white/10'}`} style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
+                                {isLineupComplete ? 'play_arrow' : 'lock'}
+                            </span>
                             <div>
-                                <p className="text-4xl font-black uppercase italic leading-none tracking-tight">Play</p>
+                                <p className="text-4xl font-black uppercase italic leading-none tracking-tight">{t('hub.play_button')}</p>
                                 <p className="mt-2 text-[11px] font-black uppercase tracking-[0.28em] opacity-70">
-                                    {teamName} - {matchLocation}
-                                    {nextMatch?.opponent ? ` vs ${nextMatch.opponent}` : ''}
+                                    {isLineupComplete ? (
+                                        <>
+                                            {teamName} - {matchLocation}
+                                            {nextMatch?.opponent ? ` vs ${nextMatch.opponent}` : ` vs ${t('hub.unknown_opponent')}`}
+                                        </>
+                                    ) : t('hub.lineup_incomplete')}
                                 </p>
                             </div>
                         </div>
-                        <span className="material-symbols-outlined text-4xl transition-transform group-hover:translate-x-2" aria-hidden="true">chevron_right</span>
+                        {isLineupComplete && <span className="material-symbols-outlined text-4xl transition-transform group-hover:translate-x-2" aria-hidden="true">chevron_right</span>}
                     </div>
                 </button>
 
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <ActionTile 
                         icon="shopping_cart" 
-                        title="Boutique" 
-                        subtitle="Acheter de l'equipement" 
-                        ariaLabel="Ouvrir la boutique pour acheter de l'équipement"
+                        title={t('hub.shop_label')} 
+                        subtitle={t('hub.shop_subtitle')} 
+                        ariaLabel={t('hub.shop_label')}
                     />
                     <ActionTile
                         disabled={!isMercatoOpen}
                         icon="swap_horiz"
-                        title="Mercato"
-                        subtitle={isMercatoOpen ? 'Vendre ou drafter des joueurs' : 'Hors periode de mercato'}
-                        ariaLabel={isMercatoOpen ? "Ouvrir le mercato pour vendre ou drafter des joueurs" : "Mercato fermé actuellement"}
+                        title={t('hub.mercato_label')}
+                        subtitle={isMercatoOpen ? t('hub.mercato_subtitle') : t('hub.rest_day')}
+                        ariaLabel={isMercatoOpen ? t('hub.mercato_label') : t('hub.rest_day')}
                     />
                 </section>
             </main>

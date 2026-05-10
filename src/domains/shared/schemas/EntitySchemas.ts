@@ -89,8 +89,26 @@ export const GameStateSchema = z.object({
     lastSaved: z.string().datetime()
 }).passthrough();
 
+export const TimelineNodeSchema = z.object({
+    id: z.string().min(1),
+    type: z.enum(['match', 'mercato', 'boss', 'rest']),
+    label: z.string().min(1),
+    status: z.enum(['completed', 'current', 'locked']),
+    opponent: z.string().optional(),
+    difficulty: z.enum(['EASY', 'NORMAL', 'HARD', 'CRITICAL']).optional()
+});
+
+export const ActiveSynergySchema = z.object({
+    id: z.string().min(1),
+    icon: z.string().min(1),
+    label: z.string().min(1),
+    description: z.string().min(1)
+});
+
 export type Player = z.infer<typeof PlayerSchema>;
 export type FieldPlayerStats = z.infer<typeof FieldPlayerStatsSchema>;
 export type GoalkeeperStats = z.infer<typeof GoalkeeperStatsSchema>;
 export type Team = z.infer<typeof TeamSchema>;
 export type GameStateData = z.infer<typeof GameStateSchema>;
+export type TimelineNode = z.infer<typeof TimelineNodeSchema>;
+export type ActiveSynergy = z.infer<typeof ActiveSynergySchema>;

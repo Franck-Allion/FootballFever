@@ -26,13 +26,37 @@ export const fr: Translations = {
         confirm_new_game_desc: 'Démarrer une nouvelle carrière effacera votre sauvegarde actuelle définitivement. Êtes-vous certain ?',
         confirm_new_game_btn: 'Confirmer : Nouvelle Partie',
         confirm_back_btn: 'Retour',
-        tagline: 'Êtes-vous le meilleur entraîneur ?'
+        tagline: 'Êtes-vous le meilleur entraîneur ?',
+        back_to_menu: 'Retour au menu principal'
     },
     hub: {
         team_management: 'HUB - Gestion de l\'Équipe',
         toggle_phaser_scene: 'Basculer Scène Phaser',
         toggle_movement: 'Basculer Mouvement',
-        add_fx_sprite: 'Ajouter Sprite FX'
+        add_fx_sprite: 'Ajouter Sprite FX',
+        division_label: 'Division',
+        credits_label: 'crédits',
+        morale_label: 'Moral de l\'équipe',
+        streak_label: 'Série en cours',
+        no_history: 'Aucun match joué',
+        fatigue_label: 'Fatigue de l\'équipe',
+        tactic_label: 'Tactique',
+        instruction_label: 'Consigne',
+        composition_label: 'Composition',
+        substitutes_label: 'Remplaçants',
+        play_button: 'JOUER LE MATCH',
+        unknown_opponent: 'Adversaire Inconnu',
+        shop_label: 'Boutique',
+        shop_subtitle: 'Améliorations & Équipements',
+        mercato_label: 'Mercato',
+        mercato_subtitle: 'Recrutement & Transferts',
+        attr_atk: 'ATQ',
+        attr_mid: 'MIL',
+        attr_def: 'DEF',
+        match_day: 'Match {0}',
+        rest_day: 'Repos',
+        lineup_incomplete: 'Composition incomplète',
+        incomplete_label: 'INCOMPLET'
     },
     match: {
         kickoff: "Coup d'envoi du match !",
@@ -52,7 +76,10 @@ export const fr: Translations = {
         ft_overlay_title: "MATCH TERMINÉ",
         ft_overlay_desc: "Le coup de sifflet final a retenti. Consultez les statistiques de vos joueurs.",
         home_label: "DOMICILE",
-        away_label: "EXTÉRIEUR"
+        away_label: "EXTÉRIEUR",
+        win_short: 'V',
+        loss_short: 'D',
+        draw_short: 'N'
     },
     debug: {
         console_title: 'Console Système',
@@ -76,7 +103,6 @@ export const fr: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Forme',
         back_hub: 'Retour au hub',
-        back_to_menu: 'Retour au menu principal',
         stat_tackling: 'Tacle',
         stat_marking: 'Marq.',
         stat_positioning: 'Plac.',

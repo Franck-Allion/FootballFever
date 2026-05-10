@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DatabaseService } from '@core/services/database/DatabaseService';
+import { AudioService } from '@core/services/audio/AudioService';
 import { useTranslation } from '../../hooks/useTranslation';
 import ActionTile from '../shared/ActionTile';
 
@@ -21,11 +22,21 @@ const MainMenu: React.FC<MainMenuProps> = ({ onContinue, onNewGame }) => {
         checkSave();
     }, []);
 
+    const handleContinue = async () => {
+        await AudioService.getInstance().unlock();
+        onContinue();
+    };
+
+    const handleNewGame = async () => {
+        await AudioService.getInstance().unlock();
+        onNewGame();
+    };
+
     const handleNewGameRequest = () => {
         if (canContinue) {
             setShowNewGameConfirm(true);
         } else {
-            onNewGame();
+            handleNewGame();
         }
     };
 
@@ -47,7 +58,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onContinue, onNewGame }) => {
                         title={t('common.continue')}
                         subtitle={t('common.continue_subtitle')}
                         disabled={!canContinue}
-                        onClick={onContinue}
+                        onClick={handleContinue}
                     />
                     <ActionTile
                         icon="fiber_new"
@@ -64,7 +75,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onContinue, onNewGame }) => {
                     </p>
                     <div className="flex flex-col gap-4">
                         <button
-                            onClick={onNewGame}
+                            onClick={handleNewGame}
                             className="w-full rounded-lg bg-red-500 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-red-600 transition-colors"
                         >
                             {t('common.confirm_new_game_btn')}

@@ -26,13 +26,37 @@ export const de: Translations = {
         confirm_new_game_desc: 'Wenn du eine neue Karriere startest, wird dein aktueller Spielstand dauerhaft gelöscht. Bist du sicher?',
         confirm_new_game_btn: 'Bestätigen: Neues Spiel',
         confirm_back_btn: 'Zurück',
-        tagline: 'Bist du der beste Manager?'
+        tagline: 'Bist du der beste Manager?',
+        back_to_menu: 'Zurück zum Hauptmenü'
     },
     hub: {
         team_management: 'HUB - Teammanagement',
         toggle_phaser_scene: 'Phaser-Szene umschalten',
         toggle_movement: 'Bewegung umschalten',
-        add_fx_sprite: 'FX-Sprite hinzufügen'
+        add_fx_sprite: 'FX-Sprite hinzufügen',
+        division_label: 'Division',
+        credits_label: 'Credits',
+        morale_label: 'Team-Moral',
+        streak_label: 'Aktuelle Serie',
+        no_history: 'Keine Spiele absolviert',
+        fatigue_label: 'Team-Ermüdung',
+        tactic_label: 'Taktik',
+        instruction_label: 'Anweisung',
+        composition_label: 'Aufstellung',
+        substitutes_label: 'Auswechselspieler',
+        play_button: 'SPIEL STARTEN',
+        unknown_opponent: 'Unbekannter Gegner',
+        shop_label: 'Shop',
+        shop_subtitle: 'Upgrades & Ausrüstung',
+        mercato_label: 'Mercato',
+        mercato_subtitle: 'Rekrutierung & Transfers',
+        attr_atk: 'ANG',
+        attr_mid: 'MIT',
+        attr_def: 'ABW',
+        match_day: 'Spiel {0}',
+        rest_day: 'Pause',
+        lineup_incomplete: 'Aufstellung unvollständig',
+        incomplete_label: 'UNVOLLSTÄNDIG'
     },
     match: {
         kickoff: "Anstoß!",
@@ -51,8 +75,11 @@ export const de: Translations = {
         ht_overlay_desc: "Die Spieler atmen durch. Sind Sie bereit für die zweite Halbzeit?",
         ft_overlay_title: "MATCH BEENDET",
         ft_overlay_desc: "Der Schlusspfiff ist ertönt. Überprüfen Sie Ihre Spielerstatistiken.",
-        home_label: "HEIM",
-        away_label: "AUSWÄRTS"
+        home_label: "HOME",
+        away_label: "AWAY",
+        win_short: 'S',
+        loss_short: 'N',
+        draw_short: 'U'
     },
     debug: {
         console_title: 'Systemkonsole',
@@ -76,7 +103,6 @@ export const de: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Form',
         back_hub: 'Zurück zum Hub',
-        back_to_menu: 'Zurück zum Hauptmenü',
         stat_tackling: 'Tack.',
         stat_marking: 'Deck.',
         stat_positioning: 'Pos.',

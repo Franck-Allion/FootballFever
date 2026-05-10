@@ -281,9 +281,9 @@ describe('LineupService', () => {
         const outOfPositionRating = LineupService.getAdjustedRating(striker, cbSlot);
 
         // Assert
-        expect(perfectRating).toBeGreaterThan(70); // Natural ST
-        expect(secondaryRating).toBeLessThan(perfectRating); // Penalized by efficiency 0.85
-        expect(sameLineRating).toBeLessThan(secondaryRating); // Penalized by efficiency 0.5
+        expect(perfectRating).toBe(striker.overallRating); // Natural ST
+        expect(secondaryRating).toBeLessThan(striker.overallRating); // Penalized by efficiency 0.95
+        expect(sameLineRating).toBeLessThan(secondaryRating); // Penalized by efficiency 0.75
         expect(outOfPositionRating).toBeLessThan(sameLineRating); // Penalized by efficiency 0.25
     });
 

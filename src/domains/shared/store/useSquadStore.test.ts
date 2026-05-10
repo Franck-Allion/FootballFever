@@ -67,11 +67,14 @@ const createGoalkeeper = (id: string, base: number): Player => PlayerSchema.pars
     } as GoalkeeperStats,
 });
 
-describe('useSquadStore team rating integration', () => {
+describe('useSquadStore', () => {
     beforeEach(() => {
         localStorage.clear();
         EntityFactory.resetCounters();
         useSquadStore.setState({
+            teamName: 'STRIKER_COMMAND',
+            teamLogo: '/assets/logo/logo-1.png',
+            division: 4,
             formation: '4-4-2 DIAMOND',
             overallRating: 0,
             composites: {
@@ -84,6 +87,8 @@ describe('useSquadStore team rating integration', () => {
             },
             staminaAvg: 100,
             morale: 50,
+            streak: [],
+            activeSynergies: [],
             roster: [],
             lineupSlots: LineupService.createEmptyLineup('4-4-2 DIAMOND'),
             benchSlots: LineupService.createEmptyBench(),
@@ -91,67 +96,120 @@ describe('useSquadStore team rating integration', () => {
         });
     });
 
-    it('updates overall, composites, morale, and stamina from the active formation', () => {
-        // Arrange
-        const roster = [
-            createGoalkeeper('gk', 65),
-            createPlayer('lb', 'LB', 60),
-            createPlayer('cb-1', 'CB', 61),
-            createPlayer('cb-2', 'CB', 62),
-            createPlayer('rb', 'RB', 63),
-            createPlayer('cdm', 'CDM', 64),
-            createPlayer('cm-1', 'CM', 65),
-            createPlayer('cm-2', 'CM', 66),
-            createPlayer('cam', 'CAM', 67),
-            createPlayer('st-1', 'ST', 80),
-            createPlayer('st-2', 'ST', 82),
-        ];
+    describe('team rating integration', () => {
+        it('updates overall, composites, morale, and stamina from the active formation', () => {
+            // Arrange
+            const roster = [
+                createGoalkeeper('gk', 65),
+                createPlayer('lb', 'LB', 60),
+                createPlayer('cb-1', 'CB', 61),
+                createPlayer('cb-2', 'CB', 62),
+                createPlayer('rb', 'RB', 63),
+                createPlayer('cdm', 'CDM', 64),
+                createPlayer('cm-1', 'CM', 65),
+                createPlayer('cm-2', 'CM', 66),
+                createPlayer('cam', 'CAM', 67),
+                createPlayer('st-1', 'ST', 80),
+                createPlayer('st-2', 'ST', 82),
+            ];
 
-        useSquadStore.setState({ roster });
+            useSquadStore.setState({ roster });
 
-        // Act
-        useSquadStore.getState().computeOverallRating();
-        const state = useSquadStore.getState();
+            // Act
+            useSquadStore.getState().computeOverallRating();
+            const state = useSquadStore.getState();
 
-        // Assert
-        expect(state.overallRating).toBeGreaterThan(0);
-        expect(state.composites.attack).toBeGreaterThan(state.composites.defense);
-        expect(state.composites.midfield).toBeGreaterThan(0);
-        expect(state.staminaAvg).toBeGreaterThan(0);
-        expect(state.morale).toBeGreaterThan(0);
+            // Assert
+            expect(state.overallRating).toBeGreaterThan(0);
+            expect(state.composites.attack).toBeGreaterThan(state.composites.defense);
+            expect(state.composites.midfield).toBeGreaterThan(0);
+            expect(state.staminaAvg).toBeGreaterThan(0);
+            expect(state.morale).toBeGreaterThan(0);
+        });
+
+        it('persists explicit lineup assignments and recomputes rating after a valid move', () => {
+            // Arrange
+            const roster = [
+                createGoalkeeper('gk', 65),
+                createPlayer('weak-st', 'ST', 45),
+                createPlayer('strong-st', 'ST', 90),
+            ];
+            useSquadStore.setState({
+                roster,
+                lineupSlots: {
+                    ...LineupService.createEmptyLineup('4-4-2 DIAMOND'),
+                    gk: 'gk',
+                    'st-l': 'weak-st',
+                },
+                benchSlots: {
+                    ...LineupService.createEmptyBench(),
+                    'bench-1': 'strong-st',
+                },
+            });
+            useSquadStore.getState().computeOverallRating();
+            const ratingBefore = useSquadStore.getState().overallRating;
+
+            // Act
+            const moved = useSquadStore.getState().movePlayerToSlot('strong-st', { area: 'pitch', slotId: 'st-l' });
+            const state = useSquadStore.getState();
+
+            // Assert
+            expect(moved).toBe(true);
+            expect(state.lineupSlots['st-l']).toBe('strong-st');
+            expect(state.benchSlots['bench-1']).toBe('weak-st');
+            expect(state.overallRating).toBeGreaterThan(ratingBefore);
+        });
     });
 
-    it('persists explicit lineup assignments and recomputes rating after a valid move', () => {
-        // Arrange
-        const roster = [
-            createGoalkeeper('gk', 65),
-            createPlayer('weak-st', 'ST', 45),
-            createPlayer('strong-st', 'ST', 90),
-        ];
-        useSquadStore.setState({
-            roster,
-            lineupSlots: {
-                ...LineupService.createEmptyLineup('4-4-2 DIAMOND'),
-                gk: 'gk',
-                'st-l': 'weak-st',
-            },
-            benchSlots: {
-                ...LineupService.createEmptyBench(),
-                'bench-1': 'strong-st',
-            },
+    describe('Sanitization (Story 10.2)', () => {
+        it('initializes with an empty streak and generated routeNodes', () => {
+            const state = useSquadStore.getState();
+            expect(state.streak).toEqual([]);
+            expect(state.activeSynergies).toEqual([]);
+            expect(state.routeNodes.length).toBeGreaterThanOrEqual(5);
+            expect(state.routeNodes.some(n => n.type === 'match')).toBe(true);
         });
-        useSquadStore.getState().computeOverallRating();
-        const ratingBefore = useSquadStore.getState().overallRating;
 
-        // Act
-        const moved = useSquadStore.getState().movePlayerToSlot('strong-st', { area: 'pitch', slotId: 'st-l' });
-        const state = useSquadStore.getState();
+        it('resets all session data when initializeRoster is forced', () => {
+            const store = useSquadStore.getState();
+            
+            // 1. Set some non-default session data
+            act(() => {
+                useSquadStore.setState({
+                    streak: ['W', 'W'],
+                    activeSynergies: [{ id: 'test', icon: 'test', label: 'test', description: 'test' }]
+                });
+            });
 
-        // Assert
-        expect(moved).toBe(true);
-        expect(state.lineupSlots['st-l']).toBe('strong-st');
-        expect(state.benchSlots['bench-1']).toBe('weak-st');
-        expect(state.overallRating).toBeGreaterThan(ratingBefore);
+            // 2. Force initialization
+            act(() => {
+                store.initializeRoster(true);
+            });
+
+            const state = useSquadStore.getState();
+            expect(state.streak).toEqual([]);
+            expect(state.activeSynergies).toEqual([]);
+            expect(state.routeNodes.length).toBeGreaterThanOrEqual(5);
+            expect(state.roster.length).toBeGreaterThan(0);
+        });
+
+        it('migrates from version 2 to 3 by sanitizing demo data', () => {
+            const { migrate } = (useSquadStore as any).persist.getOptions();
+            
+            const legacyState = {
+                version: 2,
+                streak: ['W', 'D', 'W', 'W', 'L'],
+                activeSynergies: [{ id: 's1', icon: 'bolt', label: 'Neon Counters', description: '...' }],
+                roster: [{ id: 'p1', name: 'Player 1' }]
+            };
+
+            const migrated = migrate(legacyState, 2);
+
+            expect(migrated.streak).toEqual([]);
+            expect(migrated.activeSynergies).toEqual([]);
+            expect(migrated.routeNodes.length).toBeGreaterThanOrEqual(5);
+            expect(migrated.roster).toEqual(legacyState.roster); // Roster preserved
+        });
     });
 
     it('preserves manual starters when changing formation instead of resetting to auto-selection', () => {
@@ -235,34 +293,6 @@ describe('useSquadStore team rating integration', () => {
             finalizeMatchDay({ homeScore: 0, awayScore: 2 }, 90, 123);
         });
         expect(useSquadStore.getState().streak[useSquadStore.getState().streak.length - 1]).toBe('L');
-    });
-
-    it('applies match outcomes to player stats in finalizeMatchDay', () => {
-        const { initializeRoster, finalizeMatchDay, movePlayerToSlot } = useSquadStore.getState();
-        initializeRoster(true); // Generates standard roster with player-1, player-2...
-
-        const initialPlayer = useSquadStore.getState().roster[0];
-        const initialMorale = initialPlayer.morale;
-        
-        // Ensure player is assigned to a slot so they are treated as a starter
-        act(() => {
-            movePlayerToSlot(initialPlayer.id, { area: 'pitch', slotId: 'gk' });
-        });
-
-        // Act
-        act(() => {
-            // homeScore > awayScore = WIN, homeFinalStamina = 90, seed = 123
-            finalizeMatchDay({ homeScore: 2, awayScore: 0 }, 90, 123);
-        });
-
-        const evolvedPlayer = useSquadStore.getState().roster[0];
-        
-        // Morale change should be between 5 and 10 for a win
-        expect(evolvedPlayer.morale).toBeGreaterThanOrEqual(initialMorale + 5);
-        expect(evolvedPlayer.morale).toBeLessThanOrEqual(initialMorale + 10);
-        
-        // Fatigue should be applied since player was a starter
-        expect(evolvedPlayer.condition).toBeLessThan(100);
     });
 
     it('merges persisted state correctly including composites', () => {

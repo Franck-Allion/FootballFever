@@ -1,26 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Player } from '../schemas/EntitySchemas';
+import { type Player, type TimelineNode, type ActiveSynergy } from '../schemas/EntitySchemas';
 import { type AssignmentDestination, type AssignmentMap, LineupService } from '../services/LineupService';
 import { PlayerFactory } from '../services/PlayerFactory';
 import { type TacticalInstructionId } from '../services/TacticalInstructionService';
 import { HumanManagementService, type MatchOutcome } from '../services/HumanManagementService';
-
-export interface TimelineNode {
-    id: string;
-    type: 'match' | 'mercato' | 'boss' | 'rest';
-    label: string;
-    status: 'completed' | 'current' | 'locked';
-    opponent?: string;
-    difficulty?: 'EASY' | 'NORMAL' | 'HARD' | 'CRITICAL';
-}
-
-export interface ActiveSynergy {
-    id: string;
-    icon: string;
-    label: string;
-    description: string;
-}
+import { SeasonCalendarService } from '../services/SeasonCalendarService';
 
 export type MoraleState = 'LOW' | 'STABLE' | 'HIGH' | 'EXCESSIVE';
 
@@ -96,19 +81,9 @@ export const useSquadStore = create<SquadState>()(
             },
             staminaAvg: 100,
             morale: 50,
-            streak: ['W', 'D', 'W', 'W', 'L'],
-            routeNodes: [
-                { id: '1', type: 'match', label: 'Match 1', status: 'completed', opponent: 'Kobal FC', difficulty: 'EASY' },
-                { id: '2', type: 'match', label: 'Match 2', status: 'completed', opponent: 'Zenith City', difficulty: 'NORMAL' },
-                { id: '3', type: 'mercato', label: 'Draft', status: 'completed' },
-                { id: '4', type: 'match', label: 'Match 3', status: 'current', opponent: 'Titan United', difficulty: 'HARD' },
-                { id: '5', type: 'rest', label: 'Repos', status: 'locked' },
-                { id: '6', type: 'boss', label: 'Final', status: 'locked' },
-            ],
-            activeSynergies: [
-                { id: 's1', icon: 'bolt', label: 'Neon Counters', description: 'Fast breaks deal +15% pressure' },
-                { id: 's2', icon: 'shield', label: 'Iron Wall', description: '+10% Def in Final 10m' },
-            ],
+            streak: [],
+            routeNodes: SeasonCalendarService.generateInitialCalendar(),
+            activeSynergies: [],
             roster: [],
             lineupSlots: LineupService.createEmptyLineup(DEFAULT_FORMATION),
             benchSlots: LineupService.createEmptyBench(),
@@ -184,6 +159,9 @@ export const useSquadStore = create<SquadState>()(
 
                 return { 
                     roster,
+                    streak: [],
+                    routeNodes: SeasonCalendarService.generateInitialCalendar(),
+                    activeSynergies: [],
                     ...assignments,
                     ...applyRating(roster, state.formation, assignments.lineupSlots),
                 };
@@ -215,7 +193,7 @@ export const useSquadStore = create<SquadState>()(
 
                 return {
                     roster: evolvedRoster,
-                    streak: [...state.streak.slice(1), outcome === 'win' ? 'W' : outcome === 'loss' ? 'L' : 'D'],
+                    streak: [...state.streak, outcome === 'win' ? 'W' : outcome === 'loss' ? 'L' : 'D'].slice(-5),
                     ...applyRating(evolvedRoster, state.formation, state.lineupSlots),
                 };
             }),
@@ -223,7 +201,19 @@ export const useSquadStore = create<SquadState>()(
         }),
         {
             name: 'squad-storage',
-            version: 2,
+            version: 3,
+            migrate: (persistedState, version) => {
+                const state = persistedState as SquadState;
+                
+                if (version < 3) {
+                    // Sanitize demo data from older versions
+                    state.streak = [];
+                    state.activeSynergies = [];
+                    state.routeNodes = SeasonCalendarService.generateInitialCalendar();
+                }
+
+                return state;
+            },
             merge: (persisted, current) => {
                 const saved = persisted as Partial<SquadState> | null;
                 if (!saved) return current;

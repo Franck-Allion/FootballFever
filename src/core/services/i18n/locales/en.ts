@@ -26,14 +26,38 @@ export const en: Translations = {
         confirm_new_game_desc: 'Starting a new career will delete your current save permanently. Are you sure?',
         confirm_new_game_btn: 'Confirm: New Game',
         confirm_back_btn: 'Back',
-        tagline: 'Are you the best manager?'
+        tagline: 'Are you the best manager?',
+        back_to_menu: 'Back to main menu'
     },
 
     hub: {
         team_management: 'HUB - Team Management',
         toggle_phaser_scene: 'Toggle Phaser Scene',
         toggle_movement: 'Toggle Movement',
-        add_fx_sprite: 'Add FX Sprite'
+        add_fx_sprite: 'Add FX Sprite',
+        division_label: 'Division',
+        credits_label: 'credits',
+        morale_label: 'Team Morale',
+        streak_label: 'Current Streak',
+        no_history: 'No matches played',
+        fatigue_label: 'Team Fatigue',
+        tactic_label: 'Tactic',
+        instruction_label: 'Instruction',
+        composition_label: 'Composition',
+        substitutes_label: 'Substitutes',
+        play_button: 'PLAY MATCH',
+        unknown_opponent: 'Unknown Opponent',
+        shop_label: 'Shop',
+        shop_subtitle: 'Upgrades & Equipment',
+        mercato_label: 'Mercato',
+        mercato_subtitle: 'Recruitment & Transfers',
+        attr_atk: 'ATK',
+        attr_mid: 'MID',
+        attr_def: 'DEF',
+        match_day: 'Match {0}',
+        rest_day: 'Rest',
+        lineup_incomplete: 'Lineup incomplete',
+        incomplete_label: 'INCOMPLETE'
     },
     match: {
         kickoff: "Kickoff!",
@@ -53,7 +77,10 @@ export const en: Translations = {
         ft_overlay_title: "MATCH FINISHED",
         ft_overlay_desc: "The final whistle has blown. Check your player statistics.",
         home_label: "HOME",
-        away_label: "AWAY"
+        away_label: "AWAY",
+        win_short: 'W',
+        loss_short: 'L',
+        draw_short: 'D'
     },
     debug: {
         console_title: 'System Console',
@@ -77,7 +104,6 @@ export const en: Translations = {
         tab_stats: 'Stats',
         tab_forme: 'Form',
         back_hub: 'Back to hub',
-        back_to_menu: 'Back to main menu',
         stat_tackling: 'Tack.',
         stat_marking: 'Mark.',
         stat_positioning: 'Pos.',

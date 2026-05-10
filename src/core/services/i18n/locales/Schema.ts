@@ -26,13 +26,37 @@ export const LocaleSchema = z.object({
         confirm_new_game_desc: z.string(),
         confirm_new_game_btn: z.string(),
         confirm_back_btn: z.string(),
-        tagline: z.string()
+        tagline: z.string(),
+        back_to_menu: z.string()
     }),
     hub: z.object({
         team_management: z.string(),
         toggle_phaser_scene: z.string(),
         toggle_movement: z.string(),
-        add_fx_sprite: z.string()
+        add_fx_sprite: z.string(),
+        division_label: z.string(),
+        credits_label: z.string(),
+        morale_label: z.string(),
+        streak_label: z.string(),
+        no_history: z.string(),
+        fatigue_label: z.string(),
+        tactic_label: z.string(),
+        instruction_label: z.string(),
+        composition_label: z.string(),
+        substitutes_label: z.string(),
+        play_button: z.string(),
+        unknown_opponent: z.string(),
+        shop_label: z.string(),
+        shop_subtitle: z.string(),
+        mercato_label: z.string(),
+        mercato_subtitle: z.string(),
+        attr_atk: z.string(),
+        attr_mid: z.string(),
+        attr_def: z.string(),
+        match_day: z.string(),
+        rest_day: z.string(),
+        lineup_incomplete: z.string(),
+        incomplete_label: z.string()
     }),
     match: z.object({
         kickoff: z.string(),
@@ -52,7 +76,10 @@ export const LocaleSchema = z.object({
         ft_overlay_title: z.string(),
         ft_overlay_desc: z.string(),
         home_label: z.string(),
-        away_label: z.string()
+        away_label: z.string(),
+        win_short: z.string(),
+        loss_short: z.string(),
+        draw_short: z.string()
     }),
     debug: z.object({
         console_title: z.string(),
@@ -76,7 +103,6 @@ export const LocaleSchema = z.object({
         tab_stats: z.string(),
         tab_forme: z.string(),
         back_hub: z.string(),
-        back_to_menu: z.string(),
         stat_tackling: z.string(),
         stat_marking: z.string(),
         stat_positioning: z.string(),

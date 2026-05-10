@@ -5,6 +5,20 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { LineupService } from '@domains/shared/services/LineupService';
 import { useSquadStore } from '@domains/shared/store/useSquadStore';
 import TacticsScreen from './TacticsScreen';
+import { vi } from 'vitest';
+
+// Mock AudioContext globally for this test
+const mockAudioContext = vi.fn().mockImplementation(() => ({
+    createGain: () => ({ connect: vi.fn(), gain: { value: 1, setTargetAtTime: vi.fn() } }),
+    decodeAudioData: () => Promise.resolve({ duration: 1 }),
+    createBufferSource: () => ({ connect: vi.fn(), start: vi.fn() }),
+    resume: vi.fn().mockResolvedValue(undefined),
+    destination: {},
+    currentTime: 0,
+    state: 'running'
+}));
+(window as any).AudioContext = mockAudioContext;
+(window as any).webkitAudioContext = mockAudioContext;
 
 const changeSelectByLabel = (container: HTMLElement, label: string, value: string): void => {
     const select = container.querySelector(`select[aria-label="${label}"]`);
